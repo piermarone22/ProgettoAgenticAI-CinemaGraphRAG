@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Segreti
+.env
+
+# OS / editor junk
+.DS_Store
+.ipynb_checkpoints/
+.idea/
+
+# Dati runtime pesanti (rigenerabili, non adatti a git)
+tmp/chromadb/
+tmp/cinema_traces.db
+tmp/query_log.xlsx
