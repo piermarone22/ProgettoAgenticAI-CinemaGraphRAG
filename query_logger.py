@@ -6,16 +6,20 @@ import csv
 import json
 import re
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import JSONResponse, StreamingResponse
+
+import response_cache
 
 CSV_PATH = Path(__file__).parent / "tmp" / "query_log.csv"
 CSV_FIELDS = [
     "timestamp", "team_id", "session_id", "run_id", "domanda", "agenti_chiamati",
-    "risposta", "status", "model", "model_provider", "fallback_usato",
+    "risposta", "status", "model", "model_provider", "fallback_usato", "risposta_da_cache",
     "input_tokens", "output_tokens", "total_tokens", "costo_stimato_usd", "durata_sec",
 ]
 
@@ -205,10 +209,7 @@ def _extract_from_json(raw_text: str) -> dict:
     }
 
 
-def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_sec: float) -> None:
-    text = raw.decode("utf-8", errors="replace")
-    extracted = _extract_from_stream(text) if is_stream else _extract_from_json(text)
-
+def _log_extracted(team_id: str, message: str, extracted: dict, duration_sec: float, da_cache: bool) -> None:
     provider = extracted["model_provider"]
     fallback_usato = "" if not provider else ("Sì" if provider != _PRIMARY_PROVIDER else "No")
 
@@ -224,6 +225,7 @@ def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_s
         "model": extracted["model"],
         "model_provider": provider,
         "fallback_usato": fallback_usato,
+        "risposta_da_cache": "Sì" if da_cache else "No",
         "input_tokens": extracted["input_tokens"],
         "output_tokens": extracted["output_tokens"],
         "total_tokens": extracted["total_tokens"],
@@ -232,8 +234,46 @@ def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_s
     })
 
 
+def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_sec: float) -> dict:
+    """Estrae i dati dalla risposta grezza, li logga su CSV e li restituisce
+    (cosi' il chiamante puo' eventualmente metterli in cache)."""
+    text = raw.decode("utf-8", errors="replace")
+    extracted = _extract_from_stream(text) if is_stream else _extract_from_json(text)
+    _log_extracted(team_id, message, extracted, duration_sec, da_cache=False)
+    return extracted
+
+
+def _build_cached_response(extracted: dict, wants_stream: bool):
+    """Costruisce una risposta sintetica (JSON o SSE) a partire da una voce di
+    cache, nello stesso formato che AgentOS restituirebbe per una run vera."""
+    payload = {
+        "run_id": str(uuid.uuid4()),
+        "session_id": str(uuid.uuid4()),
+        "content": extracted.get("content", ""),
+        "content_type": "str",
+        "status": extracted.get("status", "COMPLETED"),
+        "model": extracted.get("model", ""),
+        "model_provider": extracted.get("model_provider", ""),
+        "member_responses": [],
+        "cached": True,
+    }
+
+    if not wants_stream:
+        return JSONResponse(payload)
+
+    sse_body = f"event: TeamRunCompleted\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+    async def _gen():
+        yield sse_body.encode()
+
+    return StreamingResponse(_gen(), media_type="text/event-stream")
+
+
 class QueryLoggerMiddleware(BaseHTTPMiddleware):
-    """Traccia in CSV le chiamate POST /teams/{team_id}/runs, senza alterare la risposta."""
+    """Traccia in CSV le chiamate POST /teams/{team_id}/runs e le serve dalla
+    cache locale (response_cache) quando la stessa identica domanda e' gia'
+    stata risposta con successo di recente, evitando di rieseguire l'intera
+    pipeline multi-agente."""
 
     async def dispatch(self, request: Request, call_next):
         if request.method != "POST" or not _RUNS_PATH_RE.match(request.url.path):
@@ -243,7 +283,17 @@ class QueryLoggerMiddleware(BaseHTTPMiddleware):
         body = await request.body()
         fields = _parse_multipart_text_fields(body, request.headers.get("content-type", ""))
         message = fields.get("message", "")
+        wants_stream = fields.get("stream", "true").strip().lower() != "false"
         start_time = time.monotonic()
+
+        cached = response_cache.get(team_id, message)
+        if cached is not None:
+            duration_sec = time.monotonic() - start_time
+            try:
+                _log_extracted(team_id, message, cached, duration_sec, da_cache=True)
+            except Exception as exc:
+                print(f"[QueryLogger] Errore durante il logging (cache hit): {exc}")
+            return _build_cached_response(cached, wants_stream)
 
         response = await call_next(request)
         is_stream = "text/event-stream" in response.headers.get("content-type", "")
@@ -261,7 +311,9 @@ class QueryLoggerMiddleware(BaseHTTPMiddleware):
             # interni dei singoli model call.
             duration_sec = time.monotonic() - start_time
             try:
-                _log_run(team_id, message, bytes(buf), is_stream, duration_sec)
+                extracted = _log_run(team_id, message, bytes(buf), is_stream, duration_sec)
+                if extracted.get("status") == "COMPLETED":
+                    response_cache.put(team_id, message, extracted)
             except Exception as exc:  # non deve mai rompere la risposta all'utente
                 print(f"[QueryLogger] Errore durante il logging: {exc}")
 

@@ -435,6 +435,12 @@ cinema_team = Team(
     pre_hooks=[check_prompt_injection],
     post_hooks=[quality_eval],
     db=db,
+    # Memoria conversazionale: senza questo, ogni domanda viene processata in
+    # isolamento anche riusando lo stesso session_id (default agno: False).
+    # num_history_runs=5 limita il contesto agli ultimi 5 scambi per non far
+    # esplodere i token su chat lunghe.
+    add_history_to_context=True,
+    num_history_runs=5,
     instructions=[
         "Sei il direttore creativo di un sistema di intelligenza artificiale cinematografica.",
         "Ricevi richieste dall'utente, le analizzi e coordini i tuoi due specialisti per raccogliere i dati necessari.",
@@ -442,9 +448,13 @@ cinema_team = Team(
         "",
         "## PROCESSO DI LAVORO",
         "1. Analizza la richiesta e identifica quali informazioni strutturali (grafo) e semantiche (trame/bio) servono.",
-        "2. Delega al 'Graph Query Agent' per: conteggi, collaborazioni, network tra persone, dati relazionali.",
-        "3. Delega al 'Semantic Query Agent' per: recupero trame, atmosfere simili, biografie, elementi narrativi.",
-        "4. Sintetizza i dati ricevuti in una risposta finale coerente, narrativamente ricca e motivata dai dati reali.",
+        "2. Se servono ENTRAMBI gli agenti, chiama 'delegate_task_to_member' due volte nella STESSA risposta "
+        "(due tool call nello stesso turno, non uno alla volta in turni separati): le due richieste sono "
+        "indipendenti tra loro (il Semantic Agent non ha bisogno dei risultati del Graph Agent e viceversa), "
+        "quindi vengono eseguite in parallelo e la risposta arriva più velocemente. Delega al 'Graph Query Agent' "
+        "per: conteggi, collaborazioni, network tra persone, dati relazionali. Delega al 'Semantic Query Agent' "
+        "per: recupero trame, atmosfere simili, biografie, elementi narrativi.",
+        "3. Sintetizza i dati ricevuti in una risposta finale coerente, narrativamente ricca e motivata dai dati reali.",
         "",
         "## CASI D'USO E COMPORTAMENTO ATTESO",
         "",
@@ -456,8 +466,9 @@ cinema_team = Team(
         "**Creazione semantica** (sequel, fusioni, riscritture): chiedi al Semantic Agent di estrarre gli elementi",
         "cardine delle trame originali. Poi crea il nuovo concept fondendo quegli elementi con creatività.",
         "",
-        "**Pitch completo** (fusione trame + casting): coordina entrambi. Prima le trame dal Semantic Agent,",
-        "poi il network dal Graph Agent, infine genera il pitch con trama originale e casting giustificato dai dati.",
+        "**Pitch completo** (fusione trame + casting): chiedi le trame al Semantic Agent e il network al Graph Agent "
+        "IN PARALLELO (stesso turno, vedi PROCESSO DI LAVORO), poi genera il pitch con trama originale e casting "
+        "giustificato dai dati una volta ricevute entrambe le risposte.",
         "",
         "## REGOLE",
         "- Rispondi direttamente alla domanda, senza mai spiegare da dove provengono i dati né il processo seguito.",

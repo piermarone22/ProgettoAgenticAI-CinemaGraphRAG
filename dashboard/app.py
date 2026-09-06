@@ -11,7 +11,7 @@ from data import load_merged
 
 st.set_page_config(page_title="Cinema Team — Dashboard", page_icon="🎬", layout="wide")
 
-st.title("🎬 Cinema Creative Team — Log")
+st.title("🎬 Cinema Creative Team — Dashboard")
 st.caption("Domande non fallite fatte al team, con risposta completa e motivazione del giudice.")
 
 if st.sidebar.button("🔄 Ricarica dati"):
@@ -140,6 +140,87 @@ with hist_col3:
 
 st.divider()
 
+# ── Istogrammi tempo di risposta, per combinazione di agenti ────────────────
+st.subheader("Distribuzione dei tempi di risposta")
+st.caption(
+    "Escluse le risposte servite dalla cache (tempi vicini a zero) e le domande che hanno "
+    "impiegato più di 3 minuti (outlier dovuti a rate limit/blackout del servizio Gemini)."
+)
+
+# Soglia scelta per tagliare via i casi di rate limit/indisponibilita' prolungata del
+# servizio, mostrando solo la distribuzione dei tempi "normali".
+_DURATA_OUTLIER_THRESHOLD_SEC = 180
+
+_no_cache_df = df[df["risposta_da_cache"] != "Sì"] if "risposta_da_cache" in df.columns else df
+_no_cache_df = _no_cache_df[_no_cache_df["durata_sec"].fillna(0) <= _DURATA_OUTLIER_THRESHOLD_SEC]
+
+
+def _fmt_seconds(v: float) -> str:
+    return f"{v/60:.0f}m" if v >= 60 else f"{v:.0f}s"
+
+
+def _render_duration_histogram(sub_df: pd.DataFrame, color: str, n_bins: int | None = None) -> int:
+    dur_df = sub_df.dropna(subset=["durata_sec"]).copy()
+    if dur_df.empty:
+        st.info("Nessuna domanda in questa categoria.")
+        return n_bins or 0
+
+    max_dur = dur_df["durata_sec"].max()
+    if n_bins is None:
+        bin_width = _nice_bin_width(max_dur / 8)
+        n_bins = int(max_dur // bin_width) + 1
+    else:
+        bin_width = max_dur / n_bins if max_dur > 0 else 1
+    edges = [i * bin_width for i in range(n_bins + 1)]
+
+    dur_df["fascia_idx"] = (dur_df["durata_sec"] / bin_width).clip(upper=n_bins - 0.001).astype(int)
+
+    counts, labels, hover_texts = [], [], []
+    for i in range(n_bins):
+        lo, hi = edges[i], edges[i + 1]
+        bucket = dur_df[dur_df["fascia_idx"] == i]
+        counts.append(len(bucket))
+        labels.append(f"{_fmt_seconds(lo)}–{_fmt_seconds(hi)}")
+        domande = [f"• {str(d)[:80]}" for d in bucket["domanda"].tolist()]
+        hover_texts.append("<br>".join(domande) if domande else "nessuna domanda")
+
+    fig = go.Figure(
+        go.Bar(
+            x=labels,
+            y=counts,
+            customdata=hover_texts,
+            marker_color=color,
+            hovertemplate="Fascia %{x}<br>%{y} domande<br>%{customdata}<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        xaxis_title="Fascia di tempo di risposta",
+        yaxis_title="Numero di domande",
+        yaxis=dict(dtick=1),
+        xaxis_tickangle=-45,
+        margin=dict(t=10),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    return n_bins
+
+
+dur_graph_only_df = _no_cache_df[_no_cache_df["agenti_chiamati"].apply(lambda a: _row_agent_set(a) == {"Graph Query Agent"})]
+dur_semantic_only_df = _no_cache_df[_no_cache_df["agenti_chiamati"].apply(lambda a: _row_agent_set(a) == {"Semantic Query Agent"})]
+dur_both_df = _no_cache_df[_no_cache_df["agenti_chiamati"].apply(lambda a: _row_agent_set(a) == {"Graph Query Agent", "Semantic Query Agent"})]
+
+dur_col1, dur_col2, dur_col3 = st.columns(3, gap="large", border=True)
+with dur_col1:
+    st.markdown(f'<span style="color:{_COLOR_GRAPH}">●</span> **Coordinator + Graph Query Agent**', unsafe_allow_html=True)
+    dur_n_bins_reference = _render_duration_histogram(dur_graph_only_df, _COLOR_GRAPH)
+with dur_col2:
+    st.markdown(f'<span style="color:{_COLOR_SEMANTIC}">●</span> **Coordinator + Semantic Query Agent**', unsafe_allow_html=True)
+    _render_duration_histogram(dur_semantic_only_df, _COLOR_SEMANTIC, n_bins=dur_n_bins_reference or None)
+with dur_col3:
+    st.markdown(f'<span style="color:{_COLOR_BOTH}">●</span> **Coordinator + entrambi gli agenti**', unsafe_allow_html=True)
+    _render_duration_histogram(dur_both_df, _COLOR_BOTH, n_bins=dur_n_bins_reference or None)
+
+st.divider()
+
 # ── Istogrammi delle valutazioni del giudice, per combinazione di agenti ────
 st.subheader("Distribuzione delle valutazioni del giudice")
 
@@ -228,13 +309,17 @@ if show_semantic:
 filtered = df.copy()
 filtered["_modello_normalizzato"] = model_series
 
-# Mostra sempre le righe "solo coordinator" (set vuoto) + quelle che corrispondono
-# esattamente alla combinazione di agenti selezionata (non "almeno uno", il set esatto).
-filtered = filtered[
-    filtered["agenti_chiamati"].apply(
-        lambda agenti: _row_agent_set(agenti) == set() or _row_agent_set(agenti) == selected_agent_set
-    )
-]
+if not show_graph and not show_semantic:
+    # Nessun agente selezionato: nessun filtro per combinazione, mostra tutti i log.
+    pass
+else:
+    # Mostra sempre le righe "solo coordinator" (set vuoto) + quelle che corrispondono
+    # esattamente alla combinazione di agenti selezionata (non "almeno uno", il set esatto).
+    filtered = filtered[
+        filtered["agenti_chiamati"].apply(
+            lambda agenti: _row_agent_set(agenti) == set() or _row_agent_set(agenti) == selected_agent_set
+        )
+    ]
 
 if selected_model != _TUTTI:
     filtered = filtered[filtered["_modello_normalizzato"] == selected_model]

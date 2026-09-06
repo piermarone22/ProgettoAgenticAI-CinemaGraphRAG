@@ -22,3 +22,5 @@ wheels/
 tmp/chromadb/
 tmp/cinema_traces.db
 tmp/query_log.xlsx
+tmp/response_cache.json
+tmp/server.log
