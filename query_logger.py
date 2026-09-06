@@ -15,9 +15,14 @@ from starlette.requests import Request
 CSV_PATH = Path(__file__).parent / "tmp" / "query_log.csv"
 CSV_FIELDS = [
     "timestamp", "team_id", "session_id", "run_id", "domanda", "agenti_chiamati",
-    "risposta", "status", "model", "model_provider",
+    "risposta", "status", "model", "model_provider", "fallback_usato",
     "input_tokens", "output_tokens", "total_tokens", "costo_stimato_usd", "durata_sec",
 ]
+
+# Provider primario del coordinator (gemini-3.5-flash-lite / Google). Se una run
+# risponde con un provider diverso, significa che il fallback (FallbackConfig su
+# cinema_team, vedi agent.py) e' effettivamente scattato — es. Groq dopo un 429/503.
+_PRIMARY_PROVIDER = "Google"
 
 _RUNS_PATH_RE = re.compile(r"^/teams/[^/]+/runs/?$")
 _MULTIPART_FIELD_RE = re.compile(r'name="([^"]+)"')
@@ -32,7 +37,8 @@ _FINAL_EVENT_RE = re.compile(r"event:\s*(TeamRunCompleted|TeamRunError)\r?\ndata
 # Usato solo per stimare "quanto costerebbe se non fossi sul free tier".
 _PRICING_PER_MILLION_TOKENS_USD = {
     "gemini-3.5-flash-lite": {"input": 0.30, "output": 2.50},
-    "openai/gpt-oss-120b": {"input": 0.15, "output": 0.60},
+    "qwen/qwen3.8-27b": {"input": 0.80, "output": 4.00},  # modello di fallback attuale
+    "openai/gpt-oss-120b": {"input": 0.15, "output": 0.60},  # fallback precedente, tenuto per le run storiche
 }
 
 
@@ -203,6 +209,9 @@ def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_s
     text = raw.decode("utf-8", errors="replace")
     extracted = _extract_from_stream(text) if is_stream else _extract_from_json(text)
 
+    provider = extracted["model_provider"]
+    fallback_usato = "" if not provider else ("Sì" if provider != _PRIMARY_PROVIDER else "No")
+
     _append_csv_row({
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "team_id": team_id,
@@ -213,7 +222,8 @@ def _log_run(team_id: str, message: str, raw: bytes, is_stream: bool, duration_s
         "risposta": _clean_content(extracted["content"]),
         "status": extracted["status"],
         "model": extracted["model"],
-        "model_provider": extracted["model_provider"],
+        "model_provider": provider,
+        "fallback_usato": fallback_usato,
         "input_tokens": extracted["input_tokens"],
         "output_tokens": extracted["output_tokens"],
         "total_tokens": extracted["total_tokens"],

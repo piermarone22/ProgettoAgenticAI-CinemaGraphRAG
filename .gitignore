@@ -16,6 +16,7 @@ wheels/
 .DS_Store
 .ipynb_checkpoints/
 .idea/
+~$*
 
 # Dati runtime pesanti (rigenerabili, non adatti a git)
 tmp/chromadb/

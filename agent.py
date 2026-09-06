@@ -57,7 +57,14 @@ knowledge_base = Knowledge(
 # ritenta di default (retries=0). I retryDelay osservati sul free tier sono quasi
 # sempre sotto i 60s (finestra RPM a scorrimento), quindi 3 tentativi con backoff
 # esponenziale a partire da 15s coprono la stragrande maggioranza dei casi.
-_RETRY_KWARGS = dict(retries=3, delay_between_retries=15, exponential_backoff=True)
+#
+# timeout=30: senza un timeout esplicito, durante un disservizio come quello del
+# 04/09 (Gemini "high demand") una singola chiamata puo' restare appesa per minuti
+# prima di fallire — il retry/fallback scatta solo DOPO che il tentativo fallisce,
+# quindi se non fallisce mai in fretta non scattano nemmeno loro. 30s e' abbondante
+# per una risposta normale (i tempi osservati finora sono sempre sotto i 20s) ma
+# abbastanza corto da far fallire in fretta un tentativo appeso.
+_RETRY_KWARGS = dict(retries=3, delay_between_retries=15, exponential_backoff=True, timeout=30)
 
 
 def _gemini() -> Gemini:
@@ -70,11 +77,26 @@ def _gemini_worker() -> Gemini:
     # Google reindirizza a gemini-3.5-flash-lite.
     return Gemini(id="gemini-3.5-flash-lite", api_key=os.getenv("GEMINI_API_KEY"), **_RETRY_KWARGS)
 
-# def _groq_worker() -> Groq:  # worker: tool calling inaffidabile, non usare
-#     return Groq(id="openai/gpt-oss-20b", api_key=os.getenv("GROQ_API_KEY"))
-
-def _groq_creative() -> Groq:  # coordinator: solo sintesi, nessun tool esterno
-    return Groq(id="openai/gpt-oss-120b", api_key=os.getenv("GROQ_API_KEY"))
+# Modello di fallback (Groq) per quando Gemini va in rate limit (429) o e'
+# indisponibile (503) anche dopo i retry.
+#
+# Storia dei tentativi (confronto diretto, stesso prompt con tool + ReasoningTools):
+# - gpt-oss-20b: inaffidabile nel tool-calling, mai attivato.
+# - gpt-oss-120b: corrompe i nomi propri multi-parola negli argomenti dei tool
+#   ("Francis Ford Coppola" -> "Francis ?", "Woody Allen" -> "Woody ?"), causando
+#   crash o risposte vuote — riprodotto 2/2 volte con prompt diversi.
+# - groq/compound: non supporta affatto il tool calling (errore diretto dall'API).
+# - qwen/qwen3.8-27b: tool-calling corretto e dati verificati esatti, ma senza
+#   reasoning_format="hidden" lascia trapelare i tag <think>/<parameter> grezzi
+#   nella risposta finale (e' un modello "thinking"). Con l'opzione impostata,
+#   risposta pulita e affidabile — scelto come fallback definitivo.
+def _groq_fallback() -> Groq:
+    return Groq(
+        id="qwen/qwen3.8-27b",
+        api_key=os.getenv("GROQ_API_KEY"),
+        timeout=30,
+        request_params={"reasoning_format": "hidden"},
+    )
 
 # =============================================================================
 # TOOL: GRAPH QUERY AGENT (Neo4j)
@@ -265,6 +287,7 @@ def cerca_biografia(nome_persona: str) -> str:
 graph_agent = Agent(
     name="Graph Query Agent",
     model=_gemini_worker(),
+    fallback_config=FallbackConfig(on_rate_limit=[_groq_fallback()], on_error=[_groq_fallback()]),
     role="Analista strutturale: estrae dati relazionali, frequenze e network dal grafo Neo4j.",
     tools=[
         ReasoningTools(add_instructions=True),
@@ -291,6 +314,7 @@ graph_agent = Agent(
 semantic_agent = Agent(
     name="Semantic Query Agent",
     model=_gemini_worker(),
+    fallback_config=FallbackConfig(on_rate_limit=[_groq_fallback()], on_error=[_groq_fallback()]),
     role="Archivista semantico: recupera trame, atmosfere e biografie tramite ricerca vettoriale.",
     tools=[
         ReasoningTools(add_instructions=True),
@@ -401,10 +425,12 @@ cinema_team = Team(
     name="Cinema Creative Team",
     mode=TeamMode.coordinate,
     model=_gemini_worker(),  # gemini-2.5-flash e' a quota zero per oggi; rimettere _gemini() quando si resetta
-    # Gateway di fallback: se Gemini va in rate limit anche dopo i retry, passa a Groq per
-    # la sintesi finale. Solo sul coordinator (nessun tool esterno diretto, solo sintesi) —
-    # Groq si e' dimostrato inaffidabile nel tool-calling dei worker (vedi _groq_creative).
-    fallback_config=FallbackConfig(on_rate_limit=[_groq_creative()]),
+    # Gateway di fallback: se Gemini va in rate limit (429) o e' indisponibile (503,
+    # "high demand" — capitato realmente il 04/09) anche dopo i retry, passa a Groq.
+    fallback_config=FallbackConfig(
+        on_rate_limit=[_groq_fallback()],
+        on_error=[_groq_fallback()],
+    ),
     members=[graph_agent, semantic_agent],
     pre_hooks=[check_prompt_injection],
     post_hooks=[quality_eval],
