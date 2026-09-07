@@ -1,0 +1,29 @@
+domanda,percorso_v2,v1_tokens,v2_tokens,delta_tokens_pct,v1_durata_sec,v2_durata_sec,delta_durata_pct,v1_costo,v2_costo,v1_chiamate,v2_chiamate,delta_chiamate,v1_score,v2_score,delta_score
+Chi sono gli attori che hanno collaborato più spesso con Steven Spielberg?,graph,11078.0,18691,68.72179093699224,145.02,24.34,-83.21610812301752,0.002335,0.007431,2,1,-1,10.0,10.0,0.0
+Quanti film drammatici ha fatto Tom Hanks?,graph,13329.0,30642,129.88971415710105,6.68,10.05,50.449101796407206,0.005015,0.012086,2,1,-1,5.0,,
+Chi sono gli attori che hanno collaborato più spesso con Martin Scorsese?,graph,30640.0,12875,-57.97976501305483,28.3,6.63,-76.57243816254417,0.011632,0.005057,2,1,-1,9.0,7.0,-2.0
+Ci sono film in cui hanno recitato insieme Samuel L. Jackson e Bruce Willis?,graph,20577.0,19574,-4.8743743014044805,8.17,7.53,-7.833537331701343,0.007929,0.007256,2,1,-1,10.0,10.0,0.0
+"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Interstellar e The Dark Knight, con un cast reale scelto tra i collaboratori abituali di Christopher Nolan, motivato dai dati delle loro collaborazioni passate.",pitch,66525.0,82799,24.462983840661405,12221.5,20.07,-99.83578120525304,0.013248,0.036858,3,3,0,10.0,,
+Quali film ha diretto Martin Scorsese?,graph,27540.0,35954,30.551924473493102,28.49,13.02,-54.2997542997543,0.01227,0.014234,2,1,-1,8.0,10.0,2.0
+In quali film ha recitato Brad Pitt?,graph,159563.0,9834,-93.83691707977412,72.09,13.71,-80.98210570120682,0.054869,0.004913,2,1,-1,8.0,10.0,2.0
+Quanti film d'azione ha fatto Arnold Schwarzenegger?,graph,32722.0,14299,-56.301570808630274,73.25,39.1,-46.62116040955631,0.012949,0.005363,2,1,-1,1.0,10.0,9.0
+In quali film ha recitato Emma Stone?,graph,15041.0,11479,-23.681936041486605,8.03,51.88,546.0772104607722,0.006734,0.004997,2,1,-1,6.0,6.0,0.0
+In quali film ha recitato Russell Crowe?,graph,19238.0,25296,31.489759850296288,9.9,11.0,11.111111111111107,0.009027,0.010172,2,1,-1,6.0,10.0,4.0
+Chi sono gli attori che hanno collaborato più spesso con Ridley Scott?,graph,28084.0,19109,-31.95769833357072,416.36,58.75,-85.88961475646076,0.006484,0.007189,3,1,-2,,,
+In quali film ha recitato Tom Hanks?,graph,13570.0,9559,-29.557848194546793,9.33,5.83,-37.51339764201501,0.007197,0.005121,2,1,-1,10.0,,
+Trova attori con esperienza nell'horror collegati alla rete di James Cameron.,graph,200634.0,31272,-84.41340949191064,112.98,45.68,-59.56806514427333,0.072741,0.011379,3,1,-2,10.0,,
+Quali film ha diretto Wes Anderson?,graph,28832.0,16386,-43.1673140954495,13.23,53.8,306.6515495086923,0.011446,0.006394,2,1,-1,8.0,10.0,2.0
+Raccontami la biografia di Sam Worthington.,semantic,14974.0,21970,46.72098303726459,12.05,26.41,119.1701244813278,0.008289,0.009046,2,1,-1,10.0,,
+Ci sono film in cui hanno recitato insieme Leonardo DiCaprio e Kate Winslet?,graph,17720.0,15763,-11.044018058690746,8.23,21.47,160.87484811664638,0.006568,0.005877,2,1,-1,10.0,,
+In quali film ha recitato Leonardo DiCaprio?,graph,22093.0,9193,-58.3895351468791,9.79,6.58,-32.78855975485188,0.009281,0.004619,2,1,-1,8.0,10.0,2.0
+Quali film ha diretto Quentin Tarantino?,graph,23866.0,19143,-19.789658929020366,10.41,8.94,-14.121037463976952,0.00945,0.007397,2,1,-1,9.0,10.0,1.0
+Chi sono gli attori che hanno collaborato più spesso con Christopher Nolan?,graph,11056.0,13071,18.2253979739508,37.3,36.55,-2.010723860589813,0.004687,0.005109,2,1,-1,8.0,,
+Quali film ha diretto Ridley Scott?,graph,22271.0,26083,17.116429437384937,70.27,12.23,-82.59570229116265,0.009808,0.010608,2,1,-1,8.0,10.0,2.0
+"Trova film con un'atmosfera onirica, ambientati dentro ai sogni o realtà alternative, con struttura narrativa complessa a incastro.",semantic,43966.0,47900,8.94782331801847,68.2,65.62,-3.7829912023460386,0.019902,0.018704,2,1,-1,10.0,1.0,-9.0
+Trova film ambientati nello spazio con temi di sopravvivenza e isolamento estremo.,semantic,60210.0,21339,-64.55904334828102,51.72,25.84,-50.03866976024749,0.024469,0.00905,2,1,-1,10.0,,
+In quali film ha recitato Zendaya?,graph,45498.0,39599,-12.96540507275045,60.39,52.21,-13.54528895512502,0.015885,0.013954,2,1,-1,1.0,,
+Quali film ha diretto Christopher Nolan?,graph,19505.0,10989,-43.66059984619328,25.91,6.47,-75.02894635275956,0.007429,0.004753,2,1,-1,,,
+Ci sono film in cui hanno recitato insieme Robert De Niro e Al Pacino?,graph,47550.0,26793,-43.65299684542587,29.48,56.14,90.43419267299865,0.017833,0.009653,2,1,-1,10.0,10.0,0.0
+In quali film ha recitato Timothée Chalamet?,graph,87035.0,31562,-63.73642787384386,72.35,26.03,-64.02211472011057,0.031155,0.011182,3,1,-2,5.0,1.0,-4.0
+Quali film ha diretto Tim Burton?,graph,25451.0,24877,-2.2553141330399593,26.47,9.66,-63.5058556856819,0.010709,0.009784,2,1,-1,8.0,4.0,-4.0
+In quali film ha recitato Samuel L. Jackson?,graph,36641.0,11291,-69.18479299145766,52.07,37.75,-27.501440368734396,0.017077,0.006839,2,1,-1,6.0,10.0,4.0

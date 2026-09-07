@@ -426,6 +426,22 @@ quality_eval = AgentAsJudgeEval(
     telemetry=False,
 )
 
+# AgentAsJudgeEval non espone un fallback_config proprio (a differenza di
+# Agent/Team) — usa internamente un Agent "valutatore" costruito al volo da
+# get_evaluator_agent() con le istruzioni derivate da criteria/additional_guidelines
+# sopra. Qui lo si costruisce una volta subito, gli si aggiunge lo stesso
+# fallback Gemini->Groq degli altri agenti, e lo si riassegna a quality_eval:
+# le chiamate successive lo riusano (get_evaluator_agent() ritorna
+# self.evaluator_agent se gia' impostato, senza ricostruirlo). Senza questo,
+# un esaurimento della quota giornaliera di Gemini (osservato concretamente:
+# GenerateRequestsPerDayPerProjectPerModel-FreeTier su gemini-3.5-flash-lite)
+# fa fallire silenziosamente ogni valutazione — _aevaluate() cattura
+# l'eccezione e ritorna None, e arun() logga comunque una riga vuota
+# (input/score a None) nel db invece di sollevare un errore visibile.
+_quality_evaluator_agent = quality_eval.get_evaluator_agent()
+_quality_evaluator_agent.fallback_config = FallbackConfig(on_rate_limit=[_groq_fallback()], on_error=[_groq_fallback()])
+quality_eval.evaluator_agent = _quality_evaluator_agent
+
 # =============================================================================
 # TEAM COORDINATOR (Creative Agent)
 # =============================================================================

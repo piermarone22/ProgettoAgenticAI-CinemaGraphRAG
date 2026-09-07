@@ -1,0 +1,13 @@
+categoria,domanda,ground_truth
+attore_film,In quali film ha recitato Hugh Jackman?,23 film
+regista_film,Quali film ha diretto Danny Boyle?,"8 film: The Beach, Sunshine, 127 Hours, Steve Jobs, Trance, Slumdog Millionaire, 28 Days Later, Trainspotting"
+collaborazione_attori,Ci sono film in cui hanno recitato insieme Hugh Jackman e Ian McKellen?,"4 film: X-Men, X2, X-Men: The Last Stand, Flushed Away"
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Zack Snyder?,"Abbie Cornish 2, Henry Cavill 2, Amy Adams 2"
+conteggio_genere,Quanti film thriller ha fatto Cillian Murphy?,6 film
+network_genere,Trova attori con esperienza nell'avventura collegati alla rete di Danny Boyle.,
+semantica_biografia,Raccontami la biografia di Charlize Theron.,
+semantica_trame,Trova film con un'atmosfera tesa e claustrofobica ambientati durante un'epidemia o un contagio globale.,
+semantica_trame,Trova film con un tono nostalgico e malinconico ambientati durante l'adolescenza o la giovinezza.,
+pitch_completo,"Genera un pitch creativo fondendo le atmosfere di Watchmen e 300, con un cast reale scelto tra i collaboratori abituali di Zack Snyder.","cast reale tra Henry Cavill, Amy Adams, Abbie Cornish, Gal Gadot, Jesse Eisenberg"
+edge_case,In quali film ha recitato Xylo Quendrik Fasterberg?,nessun risultato atteso (persona inesistente, verifica anti-invenzione)
+attore_film,In quali film ha recitato Liam Neeson?,

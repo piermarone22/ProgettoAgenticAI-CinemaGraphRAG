@@ -1301,3 +1301,280 @@ Se vuoi, posso:
 - cercare la **biografia** del regista o di un attore chiave (es. Guy Ritchie, McDonagh, Coen)
 - fare una ricerca più specifica su un solo elemento (es. ""film con struttura a cronologia inversa"" oppure ""dark comedy post-Tarantino anni 2010"")
 - costruire una **lista di spine** per una possibile fusione/sequel spirituale partendo da uno di questi film.",COMPLETED,gemini-3.5-flash-lite,Google,No,14381,2038,16419,0.009409,175.43
+2026-09-07T16:15:15+00:00,versione_2_router,In quali film ha recitato Zoë Saldana?,graph,Graph Query Agent,"Ecco la filmografia di **Zoë Saldana** (in ordine cronologico inverso) estratta dal grafo:
+
+| Anno | Film | Regista | Generi |
+|------|------|---------|--------|
+| 2016 | Star Trek Beyond | Justin Lin | Action, Adventure, Science Fiction |
+| 2014 | Guardians of the Galaxy | James Gunn | Action, Adventure, Science Fiction |
+| 2014 | The Book of Life | Jorge R. Gutierrez | Adventure, Fantasy, Animation, Family, Comedy, Romance |
+| 2013 | Star Trek Into Darkness | J.J. Abrams | Action, Adventure, Science Fiction |
+| 2013 | Blood Ties | Guillaume Canet | Crime, Drama, Thriller |
+| 2013 | Out of the Furnace | Scott Cooper | Crime, Drama, Thriller |
+| 2012 | The Words | Brian Klugman | Drama, Thriller |
+| 2011 | Colombiana | Olivier Megaton | Action, Crime, Drama, Thriller |
+| 2010 | The Losers | Sylvain White | Action, Adventure, Crime, Thriller, Mystery |
+| 2009 | Avatar | James Cameron | Action, Adventure, Fantasy, Science Fiction |
+| 2005 | Guess Who | Kevin Rodney Sullivan | Comedy, Romance |
+| 2002 | Drumline | Charles Stone III | Drama, Comedy, Romance, Music |
+| 2002 | Crossroads | Tamra Davis | Action, Adventure, Drama, Family, Comedy, Romance, Music |
+| 2001 | Get Over It | Tommy O'Haver | Comedy, Romance |
+| 2000 | Center Stage | Nicholas Hytner | Drama, Music |
+
+**Totale: 15 film.**
+
+Se vuoi, posso approfondire per esempio i collaboratori frequenti di uno dei registi qui elencati o i film in comune con altri attori. 🎬",COMPLETED,gemini-3.5-flash-lite,Google,No,12109,787,12896,0.0056,153.54
+2026-09-07T16:35:21+00:00,versione_2_router,Puoi elencarmi la filmografia di Denzel Washington?,graph,Graph Query Agent,"<bound method ClientResponse.text of <ClientResponse(https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent) [429 Too Many Requests]>
+<CIMultiDictProxy('X-Gemini-Service-Tier': 'standard', 'Vary': 'Origin', 'Vary': 'X-Origin', 'Vary': 'Referer', 'Content-Type': 'application/json; charset=UTF-8', 'Content-Encoding': 'gzip', 'Date': 'Mon, 07 Sep 2026 16:35:21 GMT', 'Server': 'scaffolding on HTTPServer2', 'X-XSS-Protection': '0', 'X-Frame-Options': 'SAMEORIGIN', 'X-Content-Type-Options': 'nosniff', 'Server-Timing': 'gfet4t7; dur=283', 'Alt-Svc': 'h3="":443""; ma=2592000,h3-29="":443""; ma=2592000', 'Transfer-Encoding': 'chunked')>
+>",ERROR,gemini-3.5-flash-lite,Google,No,0,0,0,0.0,108.04
+2026-09-07T16:37:31+00:00,versione_2_router,Puoi elencarmi la filmografia di Denzel Washington?,graph,Graph Query Agent,"Ecco la filmografia di **Denzel Washington** presente nel database, per un totale di **30 film** (in ordine cronologico decrescente):
+
+| Anno | Film | Regista | Generi |
+|------|------|---------|--------|
+| 2014 | The Equalizer | Antoine Fuqua | Action, Crime, Thriller |
+| 2013 | 2 Guns | Baltasar Kormákur | Action, Crime, Comedy |
+| 2012 | Safe House | Daniel Espinosa | Action, Thriller |
+| 2012 | Flight | Robert Zemeckis | Drama |
+| 2010 | Unstoppable | Tony Scott | Action, Thriller |
+| 2010 | The Book of Eli | Albert Hughes | Action, Science Fiction, Thriller |
+| 2009 | The Taking of Pelham 1 2 3 | Tony Scott | Crime, Drama, Thriller |
+| 2007 | American Gangster | Ridley Scott | Crime, Drama |
+| 2007 | The Great Debaters | *Denzel Washington* | Drama |
+| 2006 | Inside Man | Spike Lee | Crime, Drama, Thriller |
+| 2004 | The Manchurian Candidate | Jonathan Demme | Drama, Thriller, Mystery |
+| 2004 | Man on Fire | Tony Scott | Action, Crime, Drama, Thriller |
+| 2003 | Out of Time | Carl Franklin | Crime, Drama, Thriller |
+| 2002 | John Q | Nick Cassavetes | Crime, Drama, Thriller |
+| 2002 | Antwone Fisher | *Denzel Washington* | Drama, Romance |
+| 2001 | Training Day | Antoine Fuqua | Action, Crime, Drama, Thriller |
+| 2000 | Remember the Titans | Boaz Yakin | Drama |
+| 1999 | The Bone Collector | Phillip Noyce | Crime, Drama, Thriller, Mystery |
+| 1999 | The Hurricane | Norman Jewison | Drama |
+| 1998 | The Siege | Edward Zwick | Action, Crime, Drama, Thriller |
+| 1998 | He Got Game | Spike Lee | Drama |
+| 1996 | Courage Under Fire | Edward Zwick | Drama, Thriller, Mystery, War |
+| 1995 | Crimson Tide | Anthony Scott | Thriller |
+| 1995 | Virtuosity | Brett Leonard | Action, Science Fiction, Crime, Thriller |
+| 1993 | The Pelican Brief | Alan J. Pakula | Crime, Drama, Thriller, Mystery |
+| 1993 | Philadelphia | Jonathan Demme | Drama |
+| 1992 | Malcolm X | Spike Lee | Drama, History |
+| 1990 | Mo' Better Blues | Spike Lee | Drama, Romance |
+| 1989 | Glory | Edward Zwick | War |
+| 1987 | Cry Freedom | Richard Attenborough | Drama |
+
+Alcune note:
+- **Film che ha diretto lui stesso** (in corsivo): *The Great Debaters* (2007) e *Antwone Fisher* (2002).
+- **Collaborazioni frequenti**: Spike Lee (Inside Man, He Got Game, Malcolm X, Mo' Better Blues) e Tony Scott (Unstoppable, Pelham 123, Man on Fire, Crimson Tide).
+- I generi in cui si concentra di più sono **Drama**, **Crime** e **Thriller**.
+
+Se vuoi, posso approfondire un aspetto specifico, ad esempio i suoi stessi collaboratori abituali o i film in comune con un altro attore.",COMPLETED,gemini-3.5-flash-lite,Google,No,4687,890,5577,0.003631,113.92
+2026-09-07T16:50:00+00:00,versione_2_router,In quali film ha recitato Hugh Jackman?,graph,Graph Query Agent,"Ecco la filmografia di **Hugh Jackman** estratta dal grafo (23 film):
+
+| Film | Anno | Regista | Generi |
+|---|---|---|---|
+| Eddie the Eagle | 2016 | Dexter Fletcher | Drama, Comedy, History |
+| Pan | 2015 | Joe Wright | Adventure, Fantasy, Family |
+| X-Men: Days of Future Past | 2014 | Bryan Singer | Action, Adventure, Fantasy, Science Fiction |
+| The Wolverine | 2013 | James Mangold | Action, Adventure, Fantasy, Science Fiction |
+| Prisoners | 2013 | Denis Villeneuve | Crime, Drama, Thriller |
+| Movie 43 | 2013 | Griffin Dunne | Comedy |
+| Rise of the Guardians | 2012 | Peter Ramsey | Fantasy, Animation, Family |
+| Les Misérables | 2012 | Tom Hooper | Drama, Romance, Music |
+| Real Steel | 2011 | Shawn Levy | Action, Science Fiction, Drama |
+| Snow Flower and the Secret Fan | 2011 | Wayne Wang | Drama, History |
+| X-Men Origins: Wolverine | 2009 | Gavin Hood | Action, Adventure, Science Fiction, Thriller |
+| Australia | 2008 | Baz Luhrmann | Drama |
+| X-Men: The Last Stand | 2006 | Brett Ratner | Action, Adventure, Science Fiction, Thriller |
+| Flushed Away | 2006 | David Bowers | Adventure, Animation, Family, Comedy |
+| Happy Feet | 2006 | George Miller | Animation, Comedy |
+| The Prestige | 2006 | Christopher Nolan | Drama, Thriller, Mystery |
+| The Fountain | 2006 | Darren Aronofsky | Adventure, Science Fiction, Drama, Romance |
+| Scoop | 2006 | Woody Allen | Comedy, Mystery |
+| X2 | 2003 | Bryan Singer | Action, Adventure, Science Fiction, Thriller |
+| Swordfish | 2001 | Dominic Sena | Action, Crime, Thriller |
+| Kate & Leopold | 2001 | James Mangold | Fantasy, Science Fiction, Comedy, Romance |
+| Someone Like You... | 2001 | Tony Goldwyn | Comedy, Romance |
+| X-Men | 2000 | Bryan Singer | Action, Adventure, Science Fiction |
+
+Alcune osservazioni:
+- **La saga X-Men** domina la carriera: 5 film (X-Men, X2, The Last Stand, Origins: Wolverine, The Wolverine, Days of Future Past — in realtà 6, con protagonista o ruolo chiave di Wolverine).
+- Ha lavorato più volte con **Bryan Singer** (tre X-Men).
+- Buona varietà di generi: dall'azione/sci-fi al musical (*Les Misérables*), dal thriller (*The Prestige*, *Prisoners*) alle animazioni (*Happy Feet*, *Flushed Away*).
+
+Vuoi che approfondisca qualche aspetto, ad esempio le sue collaborazioni ricorrenti con un regista specifico o i film per singolo genere?",COMPLETED,gemini-3.5-flash-lite,Google,No,4517,747,5264,0.003223,110.88
+2026-09-07T16:58:35+00:00,versione_2_router,Quali film ha diretto Danny Boyle?,graph,Graph Query Agent,"I film diretti da Danny Boyle per un totale di 8:
+
+- **Steve Jobs** (2015) – Cast: Kate Winslet, Michael Fassbender, Seth Rogen – Generi: Drama, History
+- **Trance** (2013) – Cast: James McAvoy, Vincent Cassel, Rosario Dawson – Generi: Crime, Drama, Thriller, Mystery
+- **127 Hours** (2010) – Cast: James Franco, Kate Mara, Lizzy Caplan – Generi: Adventure, Drama, Thriller
+- **Slumdog Millionaire** (2008) – Cast: Dev Patel, Anil Kapoor, Freida Pinto – Generi: Drama, Romance
+- **Sunshine** (2007) – Cast: Chris Evans, Rose Byrne, Michelle Yeoh – Generi: Science Fiction, Thriller
+- **28 Days Later** (2002) – Cast: Naomie Harris, Cillian Murphy, Noah Huntley – Generi: Science Fiction, Thriller, Horror
+- **The Beach** (2000) – Cast: Leonardo DiCaprio, Tilda Swinton, Guillaume Canet – Generi: Adventure, Drama, Thriller, Romance
+- **Trainspotting** (1996) – Cast: Ewan McGregor, Kelly Macdonald, Jonny Lee Miller – Generi: Crime, Drama
+
+I dati sono già stati presentati nella risposta precedente. Ecco il riepilogo finale:
+
+## Film diretti da Danny Boyle
+
+| Anno | Film | Cast | Generi |
+|------|------|------|--------|
+| 2015 | **Steve Jobs** | Kate Winslet, Michael Fassbender, Seth Rogen | Drama, History |
+| 2013 | **Trance** | James McAvoy, Vincent Cassel, Rosario Dawson | Crime, Drama, Thriller, Mystery |
+| 2010 | **127 Hours** | James Franco, Kate Mara, Lizzy Caplan | Adventure, Drama, Thriller |
+| 2008 | **Slumdog Millionaire** | Dev Patel, Anil Kapoor, Freida Pinto | Drama, Romance |
+| 2007 | **Sunshine** | Chris Evans, Rose Byrne, Michelle Yeoh | Science Fiction, Thriller |
+| 2002 | **28 Days Later** | Naomie Harris, Cillian Murphy, Noah Huntley | Science Fiction, Thriller, Horror |
+| 2000 | **The Beach** | Leonardo DiCaprio, Tilda Swinton, Guillaume Canet | Adventure, Drama, Thriller, Romance |
+| 1996 | **Trainspotting** | Ewan McGregor, Kelly Macdonald, Jonny Lee Miller | Crime, Drama |
+
+In totale Danny Boyle ha diretto **8 film** nel database. Si nota una forte predilezione per il **Drama** (presente in 7 film su 8) e un'attività che spazia dall'avventura al fantascientifico, dal thriller all'horror.",COMPLETED,gemini-3.5-flash-lite,Google,No,6941,842,7783,0.004187,72.37
+2026-09-07T17:01:16+00:00,versione_2_router,Ci sono film in cui hanno recitato insieme Hugh Jackman e Ian McKellen?,graph,Graph Query Agent,"Sì, Hugh Jackman e Ian McKellen hanno recitato insieme in **4 film**:
+
+- **X-Men** (2000) – Regia: Bryan Singer
+- **X2** (2003) – Regia: Bryan Singer
+- **X-Men: The Last Stand** (2006) – Regia: Brett Ratner
+- **Flushed Away** (2006) – Regia: David Bowers
+
+La collaborazione più nota è alfiere la trilogia X-Men (più X2), dove Jackman interpreta Wolverine e McKellen il professor Charles Xavier.
+Inoltre, hanno anche lavorato insieme nel film d'animazione Flushed Away, in cui entrambi hanno prestato la voce a diversi personaggi.",COMPLETED,gemini-3.5-flash-lite,Google,No,8581,427,9008,0.003642,156.88
+2026-09-07T17:03:11+00:00,versione_2_router,Chi sono gli attori che hanno collaborato più spesso con Zack Snyder?,graph,Graph Query Agent,"Gli attori che hanno collaborato **più spesso con Zack Snyder** (2 film ciascun/о) sono:
+
+## 🏆 I più frequenti (2 film)
+| Attore | Film in comune |
+|--------|----------------|
+| **Amy Adams** | *Batman v Superman: Dawn of Justice*, *Man of Steel* |
+| **Henry Cavill** | *Batman v Superman: Dawn of Justice*, *Man of Steel* |
+| **Abbie Cornish** | *Legend of the Guardians: The Owls of Ga'Hoole*, *Sucker Punch* |
+
+## 🎬 Collaboratori con un solo film
+Gal Gadot, Michael Shannon, Kevin Costner e Jesse Eisenberg (*Batman v Superman* / *Man of Steel*), oltre a Billy Crudup e Malin Åkerman (*Watchmen*) e Diane Lane (*Man of Steel*).
+
+In sintesi, **Amy Adams, Henry Cavill e Abbie Cornish** sono i volti ricorrenti nel filmografia di Snyder, seguiti dagli altri interpreti apparsi in un singolo titolo.",COMPLETED,gemini-3.5-flash-lite,Google,No,6435,398,6833,0.002926,110.54
+2026-09-07T17:20:08+00:00,versione_2_router,Quanti film thriller ha fatto Cillian Murphy?,graph,Graph Query Agent,"## Cillian Murphy – Film thriller
+
+**Cillian Murphy ha interpretato 6 film di genere Thriller (come attore):**
+
+| Anno | Film | Regista |
+|------|------|---------|
+| 2015 | *In the Heart of the Sea* | Ron Howard |
+| 2012 | *Red Lights* | Rodrigo Cortés |
+| 2011 | *In Time* | Andrew Niccol |
+| 2007 | *Sunshine* | Danny Boyle |
+| 2005 | *Red Eye* | Wes Craven |
+| 2002 | *28 Days Later* | Danny Boyle |
+
+> Nota: nel database il genere è archiviato come ""Thriller"" (con la T maiuscola); per questo un conteggio iniziale con ""thriller"" in minuscolo non restituiva risultati.",COMPLETED,gemini-3.5-flash-lite,Google,No,23538,1019,24557,0.009609,203.44
+2026-09-07T17:22:17+00:00,versione_2_router,Raccontami la biografia di Charlize Theron.,semantic,Semantic Query Agent,"# Charlize Theron — Biografia
+
+**Charlize Theron** (nata il **7 agosto 1975** a Benoni, Gauteng, Sudafrica) è una celebre attrice e produttrice di origini sudafricane e statunitensi. È una delle attrici meglio pagate al mondo, con un palmarès che include un **Oscar**, un **Golden Globe**, oltre a tre nomination ai **BAFTA** e due agli **Emmy**.
+
+## Ascesa internazionale
+
+Theron raggiunge la notorietà mondiale nel corso degli anni '90 con i ruoli da protagonista in film di Hollywood come:
+- ***The Devil's Advocate*** (1997)
+- ***Mighty Joe Young*** (1998)
+- ***The Cider House Rules*** (1999)
+
+## Il colpo da Oscar con *Monster*
+
+La vera consacrazione arriva nel 2003 con **Monster**, dove interpreta la serial killer **Aileen Wuornos**. Interpretando questo ruolo, Theron dimagrisce drasticamente e trasforma il proprio corpo per calarsi nella parte. Per questa performance riceve il **Orso d'Argento** a Berlino e l'**Oscar alla Migliore Attrice Protagonista**, diventando la **prima sudafricana** a vincere un Oscar per l'interpretazione.
+
+## Altre nomination e riconoscimenti
+
+- **North Country** (2005): interpreta una donna in cerca di giustizia dopo una violazione sessuale → **nomination Oscar**.
+- **Bombshell** (2019): interpreta **Megyn Kelly** → **nomination Oscar**.
+- È stata elogiata anche per i suoi ruoli di donne turbate nei comedy-drama di Jason Reitman: **Young Adult** (2011) e **Tully** (2018).
+
+## Carriera d'azione
+
+Theron ha incarnato numerosi ruoli d'azione di grande successo commerciale:
+- ***The Italian Job*** (2003)
+- ***Hancock*** (2008)
+- ***Prometheus*** (2012)
+- ***Mad Max: Fury Road*** (2015)
+- ***Atomic Blonde*** (2017)
+- ***The Old Guard*** (2020)
+- Tre capitoli della saga **Fast & Furious**: *The Fate of the Furious* (2017), *F9* (2021), *Fast X* (2023)
+
+## Televisione e produzione
+
+- In tv, riceve una **nomination al Primetime Emmy Award** per il ruolo di **Britt Ekland** nel film biografico *The Life and Death of Peter Sellers* (2004).
+- Dagli inizi del 2000 si è affermata anche come **produttrice** con la sua società **Denver and Delilah Productions**, producendo film come *The Burning Plain* (2008), *Dark Places* (2015) e *Long Shot* (2019), spesso nei quali ha anche recitato come protagonista.
+
+## Vita personale e riconoscimenti
+
+- Nel **2007** diventa **cittadina americana**, mantenendo anche la cittadinanza sudafricana.
+- Nel **2016** è stata inserita da *Time* nella lista dei **100 personaggi più influenti al mondo**.
+
+---
+
+Charlize Theron si distingue per la sua straordinaria versatilità: capace di passare da drammi dal forte impatto psicologico a film d'azione spettacolari, è una delle attrici più complete del cinema contemporaneo.",COMPLETED,gemini-3.5-flash-lite,Google,No,8667,1185,9852,0.005563,124.69
+2026-09-07T17:24:13+00:00,versione_2_router,Trova film con un'atmosfera tesa e claustrofobica ambientati durante un'epidemia o un contagio globale.,semantic,Semantic Query Agent,"Si è passati al setaccio il knowledge base per individuare film che combinino un'atmosfera tesa e claustrofobica con il tema dell'epidemia o del contagio globale. Di seguito la selezione più pertinente, ordinata per affinità con la richiesta.
+
+## 🎬 Film consigliati
+
+### 1. **Quarantine** (2008) — John Erick Dowdle
+**Il più in linea con la richiesta.** Una giornalista televisiva e il suo cameraman rimangono intrappolati all'interno di un palazzo messo in quarantena dal CDC dopo lo scoppio di un misterioso virus che trasforma gli esseri umani in assassini sanguinari.
+- **Elementi chiave:** confino letterale in un edificio, escalation ansiogena, tensione costante in spazi ridotti, contagio virale come minaccia concreta.
+- *Atmosferica ristretta, claustrofobia pura + epidemia.*
+
+### 2. **Containsion** (2015) — Neil Mcenery-West
+I residenti di un blocco di appartamenti si svegliano un mattino sigillati all'interno dei propri appartamenti e cercano di scoprire il motivo, rischiando di distruggersi a vicenda.
+- **Elementi chiave:** confinamento verticale (scala di un palazzo), paranoia interpersonale, spasmi di tensione crescente.
+- *Menos enfasi sul virus in sé, ma la struttura ""trappola"" è potentissima.*
+
+### 3. **The Mist – La nebbia** (2007) — Frank Darabont
+Dopo un violento temporale, una fitta nebbia avvolge una cittadina del Maine, intrappolando David Drayton e suo figlio in un supermercato insieme ad altri sopravvissuti. La nebbia cela una minaccia letale incontrollata.
+- **Elementi chiave:** gruppo chiuso in un unico punto, paura dell'ignoto, rapporto di forza che si capovolge continuamente, finale devastante.
+- *Più horror-scientifico che epidemia, ma la dinamica ""trappola collettiva"" è ugualmente suffocante.*
+
+### 4. **10 Cloverfield Lane** (2016) — Dan Trachtenberg
+Dopo un incidente d'auto, Michelle si risveglia in un bunker con due uomini che le raccontano di un attacco chimico esterno. Deve capire se fuori c'è un pericolo biologico reale o una trappola psicologica.
+- **Elementi chiave:** isolamento totale in un rifugio, manipolazione mentale, ambiguità permanente.
+- *Il tema ""contagio/bioso"" è centrale, anche se il motore narrativo è più thriller psicologico.*
+
+### 5. **Contagion** (2011) — Steven Soderbergh
+Un letale virus aereo che uccide in pochi giorni si diffonde in tutto il mondo; la comunità medica corre per trovare una cura mentre il panico si propaga più velocemente del virus stesso.
+- **Elementi chiave:** prospettiva globale, ritmo incalzante, realismo clinico, impatto sociale del contagio.
+- *Meno claustrofobico negli spazi, ma l'atmosfera di minaccia universale e inarrestabile è agghiacciante.*
+
+### 6. **28 Days Later** (2002) — Danny Boyle
+Ventotto giorni dopo che un virus letale è stato liberato per errore da un istituto di ricerca britannico, un piccolo gruppo di sopravvissuti lotta per proteggersi.
+- **Elementi chiave:** Londra deserta, virus狂暴 rapido, paura dell'incontro, tensione della sopravvivenza.
+- *Il ""contagio"" qui è puro e tremendo; la claustrofobia deriva dall'attesa e dall'isolamento, più che da spazi ristretti.*
+
+### 7. **Outbreak** (1995) — Wolfgang Petersen
+Un letale virus aereo arriva negli USA uccidendo a ritmo epidemico; il Colonnello Sam Daniels deve impedirne la diffusione da un piccolo paese destinato alla quarantena (e all'incenerimento).
+- **Elementi chiave:** confino militare, zona terremi, tensione tra scienza e forza bruta.
+
+### 8. **Carriers** (2009) — Àlex Pastor e Javier Rojas
+Quattro amici in fuga da una pandemia virale scoprono di essere più pericolosi del virus stesso: il contagio è ovunque, nessuno è al sicuro.
+- **Elementi chiave:** fuga continua, incertezza su chi sia infetto, claustrofobia della strada (auto, corridoi).
+
+### 9. **The Invasion** (2007) — Oliver Hirschbiegel
+Due psicologi a Washington DC sono gli unici a rendersi conto di un'epidemia aliena che subdola sostituisce gli esseri umani con copie.
+- **Elementi chiave:** paranoia della ""sostituzione"", minaccia invisibile in mezzo alla normalità, tensione silenziosa.
+
+### 10. **The Andromeda Strain** (1971) — Robert Wise
+Dopo il rientro a Terra di un satellite spaziale, tutti gli abitanti di Piedmont (Nuovo Messico) sono morti. Un gruppo di scienziati è confinato per studiare il microrganismo.
+- **Elementi chiave:** contenimento in laboratorio, minaccia cosmica, tensione da ""orologio che scorre"".
+
+---
+
+## 📌 Raccomandazione mirata
+
+Se l'atmosfera **claustrofobica** è l'elemento prioritario, partirei con:
+1. **Quarantine** (confino in un edificio + zombi-virale)
+2. **10 Cloverfield Lane** (bunker + ambiguità)
+3. **The Mist** (supermercato + orrore ignoto)
+
+Se invece vuoi enfatizzare la **panica da contagio globale** con ritmo serrato:
+- **Contagion** per il realismo
+- **28 Days Later** per l'intensità
+- **Outbreak** per l'approccio ""military medical""
+
+Vuoi che approfondisca uno di questi titoli (regista, cast, elementi narrativi chiave) o che cerchi film simili a uno specifico di questa lista?",COMPLETED,gemini-3.5-flash-lite,Google,No,4409,1451,5860,0.00495,112.38
+2026-09-07T17:27:56+00:00,versione_2_router,"Genera un pitch creativo fondendo le atmosfere di Watchmen e 300, con un cast reale scelto tra i collaboratori abituali di Zack Snyder.",pitch,"Semantic Query Agent, Graph Query Agent, Pitch Synthesizer","I dati ricevuti sono vuoti o errati: entrambi i blocchi (dati semantici e dati relazionali) contengono esclusivamente log di errore HTTP (429 Too Many Requests) e non forniscono alcuna informazione concreta sulle atmosfere, le trame o le collaborazioni reali.
+
+Pertanto, **non è possibile generare il pitch creativo né proporre un cast**, in quanto mancano i dati necessari e la mia istrigizia mi impone di non inventare nomi, titoli o numeri di collaborazione non presenti nei dati forniti.",COMPLETED,gemini-3.5-flash-lite,Google,No,5209,420,5629,0.002613,218.43

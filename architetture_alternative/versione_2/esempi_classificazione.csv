@@ -1,0 +1,113 @@
+categoria,domanda
+attore_film,In quali film ha recitato Tom Hanks?
+attore_film,In quali film ha recitato Leonardo DiCaprio?
+attore_film,In quali film ha recitato Brad Pitt?
+attore_film,In quali film ha recitato Meryl Streep?
+attore_film,In quali film ha recitato Russell Crowe?
+attore_film,In quali film ha recitato Samuel L. Jackson?
+regista_film,Quali film ha diretto Christopher Nolan?
+regista_film,Quali film ha diretto Ridley Scott?
+regista_film,Quali film ha diretto Quentin Tarantino?
+regista_film,Quali film ha diretto Martin Scorsese?
+regista_film,Quali film ha diretto Wes Anderson?
+collaborazione_attori,Ci sono film in cui hanno recitato insieme Leonardo DiCaprio e Kate Winslet?
+collaborazione_attori,Ci sono film in cui hanno recitato insieme Robert De Niro e Al Pacino?
+collaborazione_attori,Ci sono film in cui hanno recitato insieme Samuel L. Jackson e Bruce Willis?
+collaborazione_attori,"Quali film hanno in comune Tom Hanks, Tim Allen e Don Rickles?"
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Christopher Nolan?
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Martin Scorsese?
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Tim Burton?
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Steven Spielberg?
+collaboratori_regista,Chi sono gli attori che hanno collaborato più spesso con Ridley Scott?
+conteggio_genere,Quanti film drammatici ha fatto Tom Hanks?
+conteggio_genere,Quanti film d'azione ha fatto Arnold Schwarzenegger?
+conteggio_genere,Quanti film commedia ha diretto Wes Anderson?
+network_genere,Trova attori con esperienza nell'horror collegati alla rete di James Cameron.
+network_genere,Trova attori con esperienza nella commedia collegati alla rete di Christopher Nolan.
+semantica_trame,Trova film ambientati nello spazio con temi di sopravvivenza e isolamento estremo.
+semantica_trame,"Trova film con un'atmosfera onirica, ambientati dentro ai sogni o realtà alternative, con struttura narrativa complessa a incastro."
+semantica_trame,"Trova film che sembrano aver tratto ispirazione da Pulp Fiction, per struttura narrativa non lineare e humor nero."
+semantica_trame,Trova film ambientati in un contesto di criminalità organizzata con un protagonista in ascesa e successiva caduta.
+semantica_biografia,Raccontami la biografia di Sam Worthington.
+semantica_biografia,Chi è e cosa ha fatto nella sua carriera Christopher Nolan?
+semantica_biografia,Dammi qualche informazione biografica su Meryl Streep.
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Interstellar e The Dark Knight, con un cast reale scelto tra i collaboratori abituali di Christopher Nolan, motivato dai dati delle loro collaborazioni passate."
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Fight Club e Se7en, con un cast reale scelto tra i collaboratori abituali di David Fincher, motivato dai dati delle loro collaborazioni passate."
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Edward Scissorhands e Beetlejuice, con un cast reale scelto tra i collaboratori abituali di Tim Burton, motivato dai dati delle loro collaborazioni passate."
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Jurassic Park e Minority Report, con un cast reale scelto tra i collaboratori abituali di Steven Spielberg, motivato dai dati delle loro collaborazioni passate."
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere di Gladiator e The Martian, con un cast reale scelto tra i collaboratori abituali di Ridley Scott, motivato dai dati delle loro collaborazioni passate."
+pitch_completo,"Genera un pitch creativo per un nuovo film fondendo le atmosfere de Il Signore degli Anelli: La Compagnia dell'Anello e King Kong, con un cast reale scelto tra i collaboratori abituali di Peter Jackson, motivato dai dati delle loro collaborazioni passate."
+attore_film,Puoi dirmi in quali pellicole ha lavorato come attrice Emma Stone?
+attore_film,Qual è la filmografia completa di Denzel Washington?
+attore_film,Elenco dei film con Johnny Depp nel cast per favore.
+attore_film,In che produzioni cinematografiche compare Natalie Portman?
+attore_film,Vorrei sapere a quali film ha preso parte Cate Blanchett.
+attore_film,Javier Bardem ha recitato in quali lungometraggi?
+attore_film,Angelina Jolie in quali film ha lavorato come attrice?
+attore_film,Che film ha fatto finora Zoe Saldana?
+attore_film,Mi serve l'elenco dei film in cui compare Matt Damon.
+attore_film,George Clooney ha fatto parte del cast di quali film?
+regista_film,Quali sono i film diretti da Guy Ritchie?
+regista_film,David Fincher ha girato quali pellicole come regista?
+regista_film,Elencami la filmografia da regista di Judd Apatow.
+regista_film,Quali pellicole sono state dirette da Steven Spielberg?
+regista_film,Di quali produzioni è stato regista Peter Jackson?
+regista_film,Tim Burton ha diretto quali film?
+regista_film,Mi servono i titoli dei film girati da James Cameron come regista.
+regista_film,Quali lungometraggi porta la firma registica di Ridley Scott?
+regista_film,Elenca le pellicole dirette da Martin Scorsese.
+regista_film,Quali film del database sono stati diretti da Christopher Nolan?
+collaborazione_attori,Matt Damon e George Clooney hanno mai recitato insieme in un film?
+collaborazione_attori,Esiste un film con sia Julia Roberts sia Sandra Bullock nel cast?
+collaborazione_attori,Ci sono pellicole in cui compaiono sia Will Smith sia Kevin Spacey?
+collaborazione_attori,Quali film vedono insieme nel cast Christian Bale e Michael Caine?
+collaborazione_attori,Ian McKellen e Elijah Wood hanno lavorato insieme in quali produzioni?
+collaborazione_attori,C'è un film in cui recitano sia Jonah Hill sia Seth Rogen?
+collaborazione_attori,Anne Hathaway e Gary Oldman condividono il cast in qualche pellicola?
+collaborazione_attori,Morgan Freeman ha mai recitato in un film insieme a Christoph Waltz?
+collaboratori_regista,Con quali attori lavora più abitualmente il regista David Fincher?
+collaboratori_regista,Quali interpreti tornano più spesso nei film di Guy Ritchie?
+collaboratori_regista,Judd Apatow ha un gruppo di attori con cui collabora ripetutamente?
+collaboratori_regista,Chi sono gli interpreti più ricorrenti nella filmografia di Peter Jackson?
+collaboratori_regista,Con quali attori ha lavorato più volte James Cameron?
+collaboratori_regista,Quali attori compaiono più di frequente nei film diretti da Steven Spielberg?
+collaboratori_regista,Tim Burton si affida spesso agli stessi attori: quali sono?
+collaboratori_regista,Chi sono i collaboratori abituali di Ridley Scott tra gli attori?
+conteggio_genere,Quanti film thriller ha interpretato Denzel Washington?
+conteggio_genere,Angelina Jolie quante pellicole drammatiche ha fatto?
+conteggio_genere,Conta i film fantasy in cui compare Johnny Depp.
+conteggio_genere,Will Smith in quanti film d'azione ha recitato?
+conteggio_genere,Quante pellicole di genere drammatico ha interpretato Cate Blanchett?
+conteggio_genere,Adam Sandler ha fatto quante commedie nel database?
+conteggio_genere,Quanti film di fantascienza ha interpretato Sigourney Weaver?
+conteggio_genere,Matt Damon quante pellicole thriller ha fatto?
+network_genere,Trova attori con esperienza in film d'avventura collegati alla rete di Guy Ritchie.
+network_genere,Quali interpreti horror sono collegati indirettamente al giro di collaboratori di David Fincher?
+network_genere,Chi sono gli attori comici collegati alla rete di Judd Apatow?
+network_genere,Attori con esperienza fantasy connessi al network di Peter Jackson: chi sono?
+network_genere,Trova interpreti action legati indirettamente ai collaboratori abituali di James Cameron.
+network_genere,Quali attori drammatici sono collegati alla rete di collaborazioni di Ridley Scott?
+semantica_trame,Cerco pellicole con un'atmosfera post-apocalittica
+semantica_trame,Consigliami film che raccontano una storia di vendetta personale portata avanti per anni.
+semantica_trame,Quali film hanno una trama incentrata su un'indagine poliziesca con un finale a sorpresa?
+semantica_trame,Trova pellicole ambientate in un futuro distopico controllato da un regime totalitario.
+semantica_trame,Cerco film con protagonisti che intraprendono un viaggio di formazione personale.
+semantica_trame,Quali pellicole raccontano storie d'amore ostacolate da differenze sociali o familiari?
+semantica_trame,Trova film con un'atmosfera claustrofobica ambientati quasi interamente in un solo luogo.
+semantica_trame,Consigliami pellicole che esplorano il tema dell'identità e della doppia personalità.
+semantica_biografia,Raccontami la storia personale di Denzel Washington.
+semantica_biografia,Chi è Emma Stone e come si è affermata nel cinema?
+semantica_biografia,Dammi qualche dettaglio sulla vita privata e professionale di Johnny Depp.
+semantica_biografia,Qual è il percorso professionale di Natalie Portman?
+semantica_biografia,Vorrei conoscere il background biografico di Cate Blanchett.
+semantica_biografia,Com'è iniziata la carriera di Javier Bardem?
+semantica_biografia,Raccontami chi è Angelina Jolie al di fuori del set.
+semantica_biografia,Che percorso ha fatto Zoe Saldana prima di diventare famosa?
+pitch_completo,Crea un concept per un nuovo film che fonda le atmosfere di Kill Bill e Django Unchained
+pitch_completo,Inventami una trama che unisca lo stile di Snatch e Sherlock Holmes
+pitch_completo,Genera un'idea di film che mescoli le ambientazioni di Zodiac e The Social Network
+pitch_completo,Proponi un pitch che fonda le atmosfere di Knocked Up e The 40-Year-Old Virgin
+pitch_completo,Costruisci il concept di un film che unisca l'epica di King Kong e Lo Hobbit
+pitch_completo,Genera una proposta creativa che fonda le atmosfere di Titanic e Avatar
+pitch_completo,Crea un pitch che mescoli lo stile di Catch Me If You Can e Jurassic Park
+pitch_completo,Inventami un concept che fonda le atmosfere di Big Fish e Sweeney Todd

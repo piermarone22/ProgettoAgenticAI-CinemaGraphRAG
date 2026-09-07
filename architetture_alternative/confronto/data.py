@@ -201,14 +201,24 @@ def load_domande_comuni() -> pd.DataFrame:
     """Per le domande poste (testualmente identiche) su ENTRAMBE le architetture,
     l'unico confronto davvero apples-to-apples: stessa domanda, stessa pipeline
     sottostante (stessi tool, stessi dati), unica variabile la strategia di
-    instradamento. Prende l'esecuzione più recente per ciascuna domanda su
-    ciascuna architettura, se posta più volte."""
+    instradamento. Prende l'esecuzione GENUINA più recente per ciascuna domanda
+    su ciascuna architettura, se posta più volte.
+
+    Esclude deliberatamente le risposte servite dalla cache (v1) prima di
+    scegliere "la più recente": una riga da cache ha durata_sec vicino a zero
+    per costruzione (non ha rieseguito la pipeline), quindi includerla
+    falserebbe il confronto sui tempi facendo sembrare v1 istantanea su quella
+    domanda invece di misurarne una vera esecuzione. Scoperto concretamente:
+    'In quali film ha recitato Emma Stone?' aveva la sua run più recente su v1
+    servita da cache (durata_sec=0.0), che senza questo filtro avrebbe vinto
+    il confronto "ultima esecuzione" al posto della vera run di 8.03s."""
     v1 = load_v1()
     v2 = load_v2()
     if v1.empty or v2.empty:
         return pd.DataFrame()
 
-    v1c = v1[v1["status"] == "COMPLETED"].sort_values("timestamp").groupby("domanda").last().reset_index()
+    v1_genuine = v1[v1["risposta_da_cache"] != "Sì"]
+    v1c = v1_genuine[v1_genuine["status"] == "COMPLETED"].sort_values("timestamp").groupby("domanda").last().reset_index()
     v2c = v2[v2["status"] == "COMPLETED"].sort_values("timestamp").groupby("domanda").last().reset_index()
 
     comuni = set(v1c["domanda"]) & set(v2c["domanda"])
