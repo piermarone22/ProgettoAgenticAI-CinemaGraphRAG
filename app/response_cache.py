@@ -29,7 +29,8 @@ import re
 import time
 from pathlib import Path
 
-CACHE_PATH = Path(__file__).parent / "tmp" / "response_cache.json"
+# .parent.parent: questo file vive in app/, ma tmp/ e' alla radice del progetto.
+CACHE_PATH = Path(__file__).resolve().parent.parent / "tmp" / "response_cache.json"
 
 # 1 ora: sufficiente per una sessione di test/demo, abbastanza corta da non
 # rischiare risposte stantie se nel frattempo i dati sottostanti (Neo4j/ChromaDB,

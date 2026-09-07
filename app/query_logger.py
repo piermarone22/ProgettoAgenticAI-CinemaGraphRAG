@@ -16,7 +16,10 @@ from starlette.responses import JSONResponse, StreamingResponse
 
 import response_cache
 
-CSV_PATH = Path(__file__).parent / "tmp" / "query_log.csv"
+# .parent.parent: questo file vive in app/, ma tmp/ e' alla radice del progetto
+# (condivisa con dashboard/, testing/, ecc.) — non .parent da solo, altrimenti
+# punterebbe a app/tmp/ invece che alla vera radice.
+CSV_PATH = Path(__file__).resolve().parent.parent / "tmp" / "query_log.csv"
 CSV_FIELDS = [
     "timestamp", "team_id", "session_id", "run_id", "domanda", "agenti_chiamati",
     "risposta", "status", "model", "model_provider", "fallback_usato", "risposta_da_cache",
