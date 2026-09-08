@@ -1,16 +1,7 @@
-"""Caricamento unificato dei log di versione_1 (root, sempre attraverso il
-Creative Agent) e versione_2 (router deterministico) per il dashboard di
-confronto diretto tra le due architetture.
-
-Duplica volutamente la logica di caricamento/join con gli eval (invece di
-importare dashboard/data.py e versione_2/dashboard/data.py): i due moduli si
-chiamano entrambi 'data.py' e vivono in path diversi — importarli assieme
-richiederebbe un trucco fragile su sys.path/nomi di modulo (stesso tipo di
-collisione già incontrata con 'main.py' in versione_2, lì risolta con
-sys.path.append invece di insert(0, ...), ma qui il conflitto sarebbe sullo
-stesso nome importato due volte nello stesso processo — non risolvibile allo
-stesso modo). Duplicare ~40 righe di loader è più robusto che gestire quel
-conflitto.
+"""Caricamento unificato dei log di versione_1 e versione_2 per la dashboard di
+confronto. Duplica la logica di caricamento/join con gli eval invece di
+importare dashboard/data.py e versione_2/dashboard/data.py (stesso nome di
+modulo in path diversi, import simultaneo non praticabile).
 """
 
 import json
@@ -23,9 +14,10 @@ import pandas as pd
 # due livelli sotto la vera radice del progetto.
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 V1_LOG_PATH = ROOT_DIR / "tmp" / "query_log.csv"
-V2_LOG_PATH = ROOT_DIR / "architetture_alternative" / "versione_2" / "tmp" / "query_log_v2.csv"
-# Stesso db per entrambe le architetture: cinema_team (e il suo post_hook
-# quality_eval) è condiviso, vedi versione_2/dashboard/data.py per la nota
+V2_LOG_DB_PATH = ROOT_DIR / "architetture_alternative" / "versione_2" / "tmp" / "cinema_traces_v2.db"
+# Db degli score del giudice: resta quello di versione_1, perché quality_eval
+# ha il proprio db cablato alla costruzione (app/agent.py) e lo usa per
+# entrambe le architetture — vedi versione_2/dashboard/data.py per la nota
 # sul rischio di join tra domande testualmente identiche poste a ridosso nel
 # tempo su architetture diverse.
 TRACES_DB_PATH = ROOT_DIR / "tmp" / "cinema_traces.db"
@@ -49,20 +41,13 @@ def _conta_agenti(campo) -> int:
 
 
 def _n_chiamate_v1(agenti_chiamati) -> int:
-    """v1: il coordinator è SEMPRE coinvolto (delega o meno ai worker) -> +1
-    fisso, oltre a un run per ciascun worker delegato. Non conta le eventuali
-    chiamate interne di ReasoningTools (round-trip di tool-calling dentro lo
-    stesso run non sono distinguibili dai dati loggati) né la valutazione del
-    giudice (background, simmetrica tra le due architetture dopo l'estensione
-    a versione_2 — non altera il confronto relativo)."""
+    """v1: il coordinator è sempre coinvolto (+1), più un run per worker delegato."""
     return 1 + _conta_agenti(agenti_chiamati)
 
 
 def _n_chiamate_v2(percorso, agenti_coinvolti) -> int:
-    """v2: sui percorsi diretti (graph/semantic/pitch) il router non è un LLM
-    e il Creative Agent non viene mai interpellato -> nessun +1 di coordinator,
-    solo i run degli agenti effettivamente coinvolti. Sul percorso 'ambiguous'
-    la struttura è identica a v1 (si passa dallo stesso cinema_team)."""
+    """v2: nessun +1 di coordinator sui percorsi diretti (il router non è un
+    LLM); sul percorso 'ambiguous' la struttura è identica a v1."""
     n_agenti = _conta_agenti(agenti_coinvolti)
     if percorso == "ambiguous":
         return 1 + n_agenti
@@ -162,16 +147,19 @@ def load_v1() -> pd.DataFrame:
 
 
 def load_v2() -> pd.DataFrame:
-    if not V2_LOG_PATH.exists():
+    if not V2_LOG_DB_PATH.exists():
         return pd.DataFrame()
-    df = pd.read_csv(V2_LOG_PATH)
+    conn = sqlite3.connect(V2_LOG_DB_PATH)
+    try:
+        df = pd.read_sql_query("SELECT * FROM query_log ORDER BY id", conn)
+    except pd.errors.DatabaseError:
+        return pd.DataFrame()
+    finally:
+        conn.close()
+    if df.empty:
+        return df
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
-    # Normalizzato SEMPRE a "versione_2" (valore canonico usato da questa dashboard),
-    # anche se il CSV contiene gia' una colonna 'architettura' con un valore diverso
-    # (query_logger.py di versione_2 scrive "versione_2_router") — altrimenti il
-    # filtro per architettura in app.py (che confronta con "versione_2") non
-    # troverebbe mai corrispondenza e le righe di versione_2 sparirebbero silenziosamente.
-    df["architettura"] = "versione_2"
+    df["architettura"] = "versione_2"  # normalizzato (il CSV sorgente usa "versione_2_router")
     df["gruppo"] = df["percorso"]
     df["n_chiamate_llm"] = df.apply(lambda r: _n_chiamate_v2(r["percorso"], r["agenti_coinvolti"]), axis=1)
     df["risposta_da_cache"] = "No"  # versione_2 non implementa cache: nessuna riga e' mai da cache
@@ -179,11 +167,8 @@ def load_v2() -> pd.DataFrame:
 
 
 def load_confronto() -> pd.DataFrame:
-    """Concatena i due log in un unico DataFrame con schema comune, pronto per
-    confronti aggregati. Il campo 'gruppo' NON è direttamente comparabile 1:1
-    tra le due architetture (v1: combinazione di agenti delegati dal
-    coordinator; v2: percorso deciso a priori dal router) — utile per capire la
-    composizione interna di ciascuna, non per un merge riga-per-riga."""
+    """Concatena i due log in un DataFrame con schema comune per confronti
+    aggregati. Il campo 'gruppo' non è comparabile 1:1 tra le architetture."""
     frames = []
     for df in (load_v1(), load_v2()):
         if df.empty:
@@ -198,20 +183,10 @@ def load_confronto() -> pd.DataFrame:
 
 
 def load_domande_comuni() -> pd.DataFrame:
-    """Per le domande poste (testualmente identiche) su ENTRAMBE le architetture,
-    l'unico confronto davvero apples-to-apples: stessa domanda, stessa pipeline
-    sottostante (stessi tool, stessi dati), unica variabile la strategia di
-    instradamento. Prende l'esecuzione GENUINA più recente per ciascuna domanda
-    su ciascuna architettura, se posta più volte.
-
-    Esclude deliberatamente le risposte servite dalla cache (v1) prima di
-    scegliere "la più recente": una riga da cache ha durata_sec vicino a zero
-    per costruzione (non ha rieseguito la pipeline), quindi includerla
-    falserebbe il confronto sui tempi facendo sembrare v1 istantanea su quella
-    domanda invece di misurarne una vera esecuzione. Scoperto concretamente:
-    'In quali film ha recitato Emma Stone?' aveva la sua run più recente su v1
-    servita da cache (durata_sec=0.0), che senza questo filtro avrebbe vinto
-    il confronto "ultima esecuzione" al posto della vera run di 8.03s."""
+    """Confronto sulle domande poste (testo identico) su entrambe le
+    architetture: prende l'esecuzione genuina più recente per ciascuna
+    (escluse le risposte da cache di v1, che avrebbero durata falsamente
+    vicina a zero)."""
     v1 = load_v1()
     v2 = load_v2()
     if v1.empty or v2.empty:

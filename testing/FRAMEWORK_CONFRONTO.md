@@ -105,7 +105,8 @@ Se durante un test il fallback Groq scatta per un'architettura e non per
 l'altra (per puro timing di quota, non per una differenza di design), quella
 singola domanda ha token/qualità diversi per un motivo esterno alle due
 architetture messe a confronto. La colonna `fallback_usato` è già presente in
-entrambi i log (`tmp/query_log.csv`, `architetture_alternative/versione_2/tmp/query_log_v2.csv`)
+entrambi i log (`tmp/query_log.csv`, tabella `query_log` in
+`architetture_alternative/versione_2/tmp/cinema_traces_v2.db`)
 — quando confronti, segnala o escludi le righe con `fallback_usato = Sì` dal
 confronto principale, e riportale a parte se rilevanti.
 
@@ -113,7 +114,8 @@ confronto principale, e riportale a parte se rilevanti.
 
 ## 6. Un CSV dedicato per ogni esecuzione, non solo i log condivisi
 
-I log persistenti (`tmp/query_log.csv`, `architetture_alternative/versione_2/tmp/query_log_v2.csv`)
+I log persistenti (`tmp/query_log.csv` per v1, tabella `query_log` nel db
+`architetture_alternative/versione_2/tmp/cinema_traces_v2.db` per v2)
 accumulano tutte le domande mai eseguite, in sessioni diverse, con condizioni
 diverse. La dashboard di confronto, per le "domande comuni", prende la run
 più recente di ciascuna domanda in ciascun log — se la stessa domanda fosse

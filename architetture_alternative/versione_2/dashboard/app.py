@@ -36,7 +36,7 @@ def get_data() -> pd.DataFrame:
 df_raw = get_data()
 
 if df_raw.empty:
-    st.info("Nessuna query registrata ancora in `versione_2/tmp/query_log_v2.csv`. Lancia qualche domanda su /query e ricarica.")
+    st.info("Nessuna query registrata ancora nella tabella `query_log` di `versione_2/tmp/cinema_traces_v2.db`. Lancia qualche domanda su /query e ricarica.")
     st.stop()
 
 # ── Percorsi possibili e colori (stesse tonalità/logica di accessibilità della

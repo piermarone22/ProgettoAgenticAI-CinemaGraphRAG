@@ -24,3 +24,4 @@ tmp/cinema_traces.db
 tmp/query_log.xlsx
 tmp/response_cache.json
 tmp/server.log
+architetture_alternative/versione_2/tmp/cinema_traces_v2.db

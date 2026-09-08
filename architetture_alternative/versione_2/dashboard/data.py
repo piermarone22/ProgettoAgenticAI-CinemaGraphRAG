@@ -1,14 +1,14 @@
 """Caricamento e normalizzazione dei dati per la dashboard di versione_2.
 
-Due fonti:
-- versione_2/tmp/query_log_v2.csv: una riga per ogni chiamata a /query (domanda,
-  risposta, PERCORSO scelto dal router, status).
+Due fonti, due db distinti:
+- versione_2/tmp/cinema_traces_v2.db (tabella query_log): una riga per ogni
+  chiamata a /query (domanda, risposta, PERCORSO scelto dal router, status).
 - tmp/cinema_traces.db (tabella agno_eval_runs) in ROOT: i punteggi del giudice
-  (AgentAsJudgeEval). Questo database e' CONDIVISO con l'architettura originale,
-  perché il percorso 'ambiguous' di versione_2 richiama lo stesso cinema_team
-  (stesso post_hook quality_eval) — solo le righe con percorso='ambiguous'
-  avranno quindi un punteggio, le altre lo saltano per costruzione (il loro
-  scopo e' proprio evitare il giro di valutazione/orchestrazione completo).
+  (AgentAsJudgeEval). Questo database resta quello dell'architettura originale
+  perché quality_eval (usato sia dal post_hook di cinema_team sia dalle
+  chiamate esplicite di versione_2 sui percorsi diretti) ha il proprio db
+  cablato alla costruzione in app/agent.py — non e' quindi spostabile insieme
+  al resto del tracing di versione_2.
 
 Nota / limite noto: essendo il db degli eval condiviso tra le due architetture,
 se la STESSA identica domanda venisse posta sia sull'architettura originale sia
@@ -30,17 +30,23 @@ _V2_DIR = Path(__file__).resolve().parent.parent
 # architetture_alternative/, un livello sotto la vera radice del progetto.
 _ROOT_DIR = _V2_DIR.parent.parent
 
-QUERY_LOG_PATH = _V2_DIR / "tmp" / "query_log_v2.csv"
+QUERY_LOG_DB_PATH = _V2_DIR / "tmp" / "cinema_traces_v2.db"
 TRACES_DB_PATH = _ROOT_DIR / "tmp" / "cinema_traces.db"
 
 
 def load_query_log() -> pd.DataFrame:
-    if not QUERY_LOG_PATH.exists():
-        return pd.DataFrame(
-            columns=["timestamp", "architettura", "domanda", "percorso", "agenti_coinvolti", "risposta", "status"]
-        )
+    colonne = ["timestamp", "architettura", "domanda", "percorso", "agenti_coinvolti", "risposta", "status"]
+    if not QUERY_LOG_DB_PATH.exists():
+        return pd.DataFrame(columns=colonne)
 
-    df = pd.read_csv(QUERY_LOG_PATH)
+    conn = sqlite3.connect(QUERY_LOG_DB_PATH)
+    try:
+        df = pd.read_sql_query("SELECT * FROM query_log ORDER BY id", conn)
+    except pd.errors.DatabaseError:
+        return pd.DataFrame(columns=colonne)
+    finally:
+        conn.close()
+
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
     df["agenti_coinvolti"] = df["agenti_coinvolti"].fillna("(nessuno)")
     return df

@@ -1,25 +1,7 @@
-"""Cache locale su disco per le risposte del team.
-
-Se una domanda semanticamente equivalente a una gia' risposta con successo di
-recente viene riposta, la si riserve senza rieseguire l'intera pipeline
-multi-agente — utile soprattutto per le domande piu' pesanti (pitch completi:
-1-2 minuti anche con la parallelizzazione dei worker) rilanciate piu' volte
-durante test/demo, anche se riformulate in modo diverso.
-
-Solo le risposte con status COMPLETED vengono messe in cache: un 429/503
-transitorio non deve restare "congelato" per le richieste successive.
-
-Corrispondenza in due passi:
-1. Match ESATTO sul testo (stesso team, stessa stringa normalizzata): nessuna
-   chiamata di embedding, risposta immediata.
-2. Match SEMANTICO: se non c'e' un match esatto, la domanda viene confrontata
-   (cosine similarity sugli embedding Gemini) con le domande gia' in cache.
-   Per evitare falsi positivi pericolosi — es. "Quali film ha diretto Nolan?"
-   vs "Quali film ha diretto Tarantino?" sono strutturalmente quasi identiche
-   ma richiedono risposte diverse — il match semantico scatta SOLO se anche
-   l'insieme dei nomi propri (entita') estratti dalle due domande coincide
-   esattamente. La similarita' di embedding da sola non e' un segnale
-   sufficiente quando l'unica differenza tra due domande e' un nome proprio.
+"""Cache su disco delle risposte del team: match esatto sul testo, poi match
+semantico (cosine similarity) protetto da un controllo sui nomi propri
+estratti dalla domanda, per non confondere domande diverse sulla stessa
+struttura ma entità diverse. Solo le risposte COMPLETED vengono cachate.
 """
 
 import json

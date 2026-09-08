@@ -1,19 +1,16 @@
-"""Logging delle query per l'architettura a router deterministico (versione_2).
+"""Logging delle query di versione_2 sul db dedicato (tabella query_log in
+tmp/cinema_traces_v2.db), a partire dagli oggetti RunOutput restituiti da
+.arun() (non da un middleware HTTP come in app/query_logger.py).
 
-A differenza di query_logger.py in root (middleware su AgentOS che intercetta
-testo grezzo SSE/JSON), qui si lavora direttamente sugli oggetti RunOutput
-restituiti da .arun() — piu' semplice perche' non c'e' uno strato HTTP/streaming
-da intercettare. Vale pero' la stessa cautela sul conteggio dei token scoperta
-nell'architettura originale: il percorso 'ambiguous' passa dal Team
-(cinema_team), il cui '.metrics' di primo livello copre SOLO il coordinator,
-non i worker delegati (in '.member_responses') — vanno sommati esplicitamente.
+Stesso file db usato da agentos_main.py per le sessioni AgentOS (tabelle
+agno_*): la tabella query_log convive con quelle, distinta per nome.
 """
 
-import csv
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-CSV_PATH = Path(__file__).parent / "tmp" / "query_log_v2.csv"
+DB_PATH = Path(__file__).parent / "tmp" / "cinema_traces_v2.db"
 
 # Valore costante scritto su ogni riga: il file di log e' gia' fisicamente
 # separato da quello dell'architettura originale (tmp/query_log.csv in root),
@@ -22,7 +19,7 @@ CSV_PATH = Path(__file__).parent / "tmp" / "query_log_v2.csv"
 # dashboard, senza doversi affidare solo al nome del file sorgente.
 _ARCHITETTURA = "versione_2_router"
 
-CSV_FIELDS = [
+_COLONNE = [
     "timestamp", "architettura", "domanda", "percorso", "agenti_coinvolti", "risposta", "status",
     "model", "model_provider", "fallback_usato",
     "input_tokens", "output_tokens", "total_tokens", "costo_stimato_usd", "durata_sec",
@@ -101,11 +98,13 @@ def _aggregate(results: list) -> dict:
     }
 
 
-def _ensure_csv_header() -> None:
-    CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if not CSV_PATH.exists():
-        with CSV_PATH.open("w", newline="", encoding="utf-8") as f:
-            csv.DictWriter(f, fieldnames=CSV_FIELDS).writeheader()
+def _ensure_table(con: sqlite3.Connection) -> None:
+    colonne_sql = ", ".join(f'"{c}" TEXT' for c in _COLONNE if c not in ("input_tokens", "output_tokens", "total_tokens", "costo_stimato_usd", "durata_sec"))
+    con.execute(
+        f'CREATE TABLE IF NOT EXISTS query_log (id INTEGER PRIMARY KEY AUTOINCREMENT, {colonne_sql}, '
+        'input_tokens INTEGER, output_tokens INTEGER, total_tokens INTEGER, '
+        "costo_stimato_usd REAL, durata_sec REAL)"
+    )
 
 
 def log_query(
@@ -117,21 +116,30 @@ def log_query(
     results: list,
     durata_sec: float,
 ) -> None:
-    """Logga una riga in tmp/query_log_v2.csv. 'results' e' la lista dei
-    RunOutput/TeamRunOutput grezzi prodotti per rispondere alla domanda (uno
-    per graph/semantic, tre per pitch, uno per ambiguous, vuota per blocked)."""
-    _ensure_csv_header()
+    """Logga una riga nella tabella query_log di tmp/cinema_traces_v2.db.
+    'results' e' la lista dei RunOutput/TeamRunOutput grezzi prodotti per
+    rispondere alla domanda (uno per graph/semantic, tre per pitch, uno per
+    ambiguous, vuota per blocked)."""
     tok = _aggregate(results)
+    riga = {
+        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "architettura": _ARCHITETTURA,
+        "domanda": domanda,
+        "percorso": percorso,
+        "agenti_coinvolti": ", ".join(agenti_coinvolti) if agenti_coinvolti else "(nessuno)",
+        "risposta": content,
+        "status": status,
+        "durata_sec": round(durata_sec, 2),
+        **tok,
+    }
 
-    with CSV_PATH.open("a", newline="", encoding="utf-8") as f:
-        csv.DictWriter(f, fieldnames=CSV_FIELDS).writerow({
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "architettura": _ARCHITETTURA,
-            "domanda": domanda,
-            "percorso": percorso,
-            "agenti_coinvolti": ", ".join(agenti_coinvolti) if agenti_coinvolti else "(nessuno)",
-            "risposta": content,
-            "status": status,
-            "durata_sec": round(durata_sec, 2),
-            **tok,
-        })
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(DB_PATH)
+    try:
+        _ensure_table(con)
+        colonne = ", ".join(f'"{c}"' for c in riga)
+        placeholders = ", ".join("?" for _ in riga)
+        con.execute(f"INSERT INTO query_log ({colonne}) VALUES ({placeholders})", list(riga.values()))
+        con.commit()
+    finally:
+        con.close()

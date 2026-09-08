@@ -1,19 +1,6 @@
-"""Architettura sperimentale (versione_2): router deterministico che instrada
-ogni domanda verso il percorso più economico possibile, invece di passare
-SEMPRE dal Creative Agent come nell'architettura in root (main.py).
-
-Obiettivo: ridurre token spesi e tempo di risposta, evitando il costo di
-orchestrazione (ragionamento + tool call 'delegate_task_to_member') nei casi
-in cui il routing corretto è già deducibile deterministicamente dalla domanda.
-
-Riusa DIRETTAMENTE gli agenti, i tool e i modelli definiti in app/agent.py
-(stesso Graph/Semantic Agent, stesso fallback Gemini->Groq, stesso pre-hook
-anti-injection) — l'unica variabile sotto test è la strategia di instradamento,
-per un confronto onesto con l'architettura originale.
-
-Uso: uv run python architetture_alternative/versione_2/main.py   (porta 8001,
-non confligge con la porta 8000 dell'architettura originale — permette di far
-girare entrambe in parallelo per confrontarle sulle stesse domande).
+"""FastAPI dell'architettura router (versione_2): instrada ogni domanda al
+percorso deciso da router.classifica(), riusando gli agenti di app/agent.py.
+Porta 8001, per girare in parallelo all'architettura originale (porta 8000).
 """
 
 import asyncio
@@ -50,21 +37,8 @@ class DomandaRequest(BaseModel):
 
 
 async def _valuta_in_background(domanda: str, content: str) -> None:
-    """Richiama lo stesso giudice (quality_eval, root/agent.py) usato come
-    post_hook di cinema_team, ma a mano: sui percorsi GRAPH/SEMANTIC/PITCH non
-    c'e' nessun Team/post_hook che lo scateni automaticamente, dato che il
-    router li instrada bypassando cinema_team apposta per risparmiare il costo
-    di orchestrazione. Chiamare quality_eval.arun(input=, output=) direttamente
-    logga comunque il risultato sullo stesso db condiviso (tmp/cinema_traces.db
-    in root), usando ESATTAMENTE il testo della domanda originale come 'input'
-    — cosi' il join per testo usato dalla dashboard (vedi dashboard/data.py)
-    continua a funzionare senza modifiche.
-
-    Fire-and-forget (asyncio.create_task, non awaited): non deve rallentare la
-    risposta all'utente, stesso spirito di run_in_background=True sull'hook
-    originale. Il costo di questa chiamata extra e' il prezzo esplicito
-    accettato per riottenere la copertura di valutazione automatica anche sui
-    percorsi diretti."""
+    """Richiama il giudice (quality_eval) a mano, fire-and-forget: i percorsi
+    diretti bypassano cinema_team e quindi il suo post_hook automatico."""
     try:
         await quality_eval.arun(input=domanda, output=str(content))
     except Exception as exc:

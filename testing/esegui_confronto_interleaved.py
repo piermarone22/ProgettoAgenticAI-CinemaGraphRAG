@@ -1,47 +1,7 @@
-"""Esegue le STESSE domande su entrambe le architetture (versione_1/root e
-versione_2/router), alternando (interleaved) invece di testarle in blocco una
-dopo l'altra, aspettando sempre che la valutazione del giudice sia
-effettivamente comparsa nel db prima di passare alla domanda successiva, e
-scrivendo un CSV dedicato SOLO ai risultati di questa esecuzione.
-
-Vedi testing/FRAMEWORK_CONFRONTO.md per il perché di ogni scelta qui sotto:
-domande held-out (mai usate come esempi del classificatore di versione_2),
-esecuzione alternata (non v1-tutto-poi-v2-tutto, per non far pesare le
-condizioni esterne — quota Gemini, 429/503 — in modo diverso sulle due
-architetture), attesa esplicita della valutazione (mai dare per buono un
-batch se lo score nel db e' rimasto None).
-
-Perché un CSV dedicato invece di riusare i log condivisi (tmp/query_log.csv,
-versione_2/tmp/query_log_v2.csv) o la dashboard di confronto: quei log
-accumulano TUTTE le domande mai eseguite, in sessioni diverse, con condizioni
-diverse (quota, orario, eventuale fallback). La dashboard di confronto
-(architetture_alternative/confronto/) per le "domande comuni" prende la run
-più RECENTE di ciascuna domanda in ciascun log — se la stessa domanda fosse
-mai stata eseguita anche in una sessione precedente, un confronto letto da lì
-rischierebbe di mescolare un'esecuzione di oggi con una di ieri. Questo script
-invece legge, subito dopo ogni chiamata, ESATTAMENTE la riga appena scritta
-nel log dell'architettura interessata (per testo della domanda + timestamp
-successivo all'invio) e la registra nel proprio CSV di output — un confronto
-autosufficiente, limitato a QUESTA esecuzione, senza alcuna ambiguità.
-
-Prerequisiti:
-- main.py (root, porta 8000) e architetture_alternative/versione_2/main.py
-  (porta 8001) devono essere gia' avviati.
-- La quota giornaliera di Gemini deve essere disponibile (controllare prima:
-  un 429/503 con 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' nei log
-  significa che le valutazioni falliranno comunque, indipendentemente da
-  questo script — vedi FRAMEWORK_CONFRONTO.md, checklist pre-test).
-
-Uso:
-    uv run python testing/esegui_confronto_interleaved.py
-    uv run python testing/esegui_confronto_interleaved.py --n 5
-    uv run python testing/esegui_confronto_interleaved.py --timeout-giudice 120 --pausa 8
-    uv run python testing/esegui_confronto_interleaved.py --file testing/domande_confronto_holdout.csv
-
-Output: testing/risultati_confronto/confronto_<timestamp>.csv — una riga per
-domanda, con le colonne v1_* e v2_* affiancate (token, costo, durata, modello,
-fallback, punteggio del giudice) pronte per un confronto diretto in un foglio
-di calcolo, senza passare dalla dashboard.
+"""Esegue le stesse domande su versione_1 e versione_2 alternando le due
+chiamate, aspetta la valutazione del giudice per ciascuna, e scrive i
+risultati in un CSV dedicato a questa esecuzione. Vedi FRAMEWORK_CONFRONTO.md
+per la metodologia. Uso: uv run python testing/esegui_confronto_interleaved.py [--n] [--pausa] [--timeout-giudice] [--file]
 """
 
 import argparse
@@ -59,7 +19,7 @@ ROOT_DIR = BASE_DIR.parent
 DEFAULT_HOLDOUT_PATH = BASE_DIR / "domande_confronto_holdout.csv"
 TRACES_DB_PATH = ROOT_DIR / "tmp" / "cinema_traces.db"
 V1_LOG_PATH = ROOT_DIR / "tmp" / "query_log.csv"
-V2_LOG_PATH = ROOT_DIR / "architetture_alternative" / "versione_2" / "tmp" / "query_log_v2.csv"
+V2_LOG_DB_PATH = ROOT_DIR / "architetture_alternative" / "versione_2" / "tmp" / "cinema_traces_v2.db"
 OUTPUT_DIR = BASE_DIR / "risultati_confronto"
 
 V1_URL = "http://127.0.0.1:8000/teams/cinema-creative-team/runs"
@@ -110,11 +70,8 @@ def esegui_v2(domanda: str) -> dict:
 
 
 def attendi_valutazione(domanda: str, timestamp_invio: float, timeout_sec: float, poll_ogni: float = 3.0) -> dict | None:
-    """Interroga tmp/cinema_traces.db finche' non compare una valutazione del
-    giudice per questa esatta domanda, generata DOPO l'invio della richiesta,
-    con uno score valido (non None — una riga con score None e' un fallimento
-    del giudice, non una valutazione riuscita, vedi limite noto in
-    FRAMEWORK_CONFRONTO.md). Ritorna None se scade il timeout."""
+    """Attende, con polling su tmp/cinema_traces.db, una valutazione del
+    giudice con score valido per questa domanda. Ritorna None allo scadere del timeout."""
     scadenza = time.time() + timeout_sec
     soglia_timestamp = int(timestamp_invio) - 2  # piccolo margine di sicurezza
     while time.time() < scadenza:
@@ -149,10 +106,8 @@ def attendi_valutazione(domanda: str, timestamp_invio: float, timeout_sec: float
 
 
 def leggi_riga_appena_scritta(csv_path: Path, domanda: str, timestamp_invio: float, tentativi: int = 5, attesa: float = 1.0) -> dict | None:
-    """Legge dal log persistente dell'architettura la riga appena aggiunta per
-    QUESTA domanda — quella con timestamp piu' vicino, ma non precedente,
-    all'invio della richiesta in questo script. Evita di prendere per sbaglio
-    un'esecuzione precedente (di un'altra sessione) della stessa domanda."""
+    """Legge dal log CSV dell'architettura (v1) la riga appena scritta per
+    questa domanda (timestamp successivo all'invio), non una run precedente."""
     soglia = timestamp_invio - 2
     for _ in range(tentativi):
         if csv_path.exists():
@@ -167,6 +122,40 @@ def leggi_riga_appena_scritta(csv_path: Path, domanda: str, timestamp_invio: flo
                         continue
                     if ts >= soglia:
                         candidate.append((ts, riga))
+            if candidate:
+                candidate.sort(key=lambda x: x[0])
+                return candidate[0][1]
+        time.sleep(attesa)
+    return None
+
+
+def leggi_riga_v2_appena_scritta(domanda: str, timestamp_invio: float, tentativi: int = 5, attesa: float = 1.0) -> dict | None:
+    """Come leggi_riga_appena_scritta, ma per v2: legge la tabella query_log
+    di cinema_traces_v2.db invece del CSV (versione_2 non logga piu' su CSV)."""
+    soglia = timestamp_invio - 2
+    for _ in range(tentativi):
+        if V2_LOG_DB_PATH.exists():
+            con = sqlite3.connect(V2_LOG_DB_PATH)
+            try:
+                cur = con.execute(
+                    "SELECT * FROM query_log WHERE domanda = ? ORDER BY id DESC LIMIT 20",
+                    (domanda,),
+                )
+                colonne = [d[0] for d in cur.description]
+                righe = [dict(zip(colonne, r)) for r in cur.fetchall()]
+            except sqlite3.OperationalError:
+                righe = []
+            finally:
+                con.close()
+
+            candidate = []
+            for riga in righe:
+                try:
+                    ts = datetime.fromisoformat(riga["timestamp"]).timestamp()
+                except (KeyError, ValueError, TypeError):
+                    continue
+                if ts >= soglia:
+                    candidate.append((ts, riga))
             if candidate:
                 candidate.sort(key=lambda x: x[0])
                 return candidate[0][1]
@@ -242,7 +231,7 @@ def main() -> None:
 
             t_v2 = time.time()
             esito_v2 = esegui_v2(domanda)
-            log_v2 = leggi_riga_appena_scritta(V2_LOG_PATH, domanda, t_v2) if esito_v2.get("status") == "COMPLETED" else None
+            log_v2 = leggi_riga_v2_appena_scritta(domanda, t_v2) if esito_v2.get("status") == "COMPLETED" else None
             valutazione_v2 = attendi_valutazione(domanda, t_v2, args.timeout_giudice) if esito_v2.get("status") == "COMPLETED" else None
             stampa_esito("versione_2", esito_v2, valutazione_v2)
 

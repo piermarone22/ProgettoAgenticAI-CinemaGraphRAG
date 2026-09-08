@@ -7,9 +7,9 @@ interfaccia a riga di comando, ma punta all'endpoint /query di versione_2
 verificare a colpo d'occhio se il routing deterministico ha classificato la
 domanda come ci si aspetterebbe.
 
-Ogni chiamata viene loggata da versione_2/query_logger.py in
-versione_2/tmp/query_log_v2.csv (separato dal log dell'architettura originale
-in tmp/query_log.csv, per non mischiare dati di architetture diverse).
+Ogni chiamata viene loggata da versione_2/query_logger.py nella tabella
+query_log di versione_2/tmp/cinema_traces_v2.db (db dedicato, separato dal
+log dell'architettura originale in tmp/query_log.csv).
 
 Uso:
     uv run python versione_2/testing/esegui_test.py 10
@@ -96,7 +96,7 @@ def main() -> None:
         print()
 
     print(f"Fatto: {ok} completate, {errori} con problemi su {len(domande)} totali.")
-    print("Dettagli completi (risposta integrale, percorso, token, costo, tempo) in versione_2/tmp/query_log_v2.csv.")
+    print("Dettagli completi (risposta integrale, percorso, token, costo, tempo) nella tabella query_log di versione_2/tmp/cinema_traces_v2.db.")
 
 
 if __name__ == "__main__":

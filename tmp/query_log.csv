@@ -1462,3 +1462,13 @@ Il cast è composto interamente da attori e attrici legati storicamente allo sti
 5. **Fantastic Mr. Fox** (2009)
 6. **Moonrise Kingdom** (2012)
 7. **The Grand Budapest Hotel** (2014)",COMPLETED,gemini-3.5-flash-lite,Google,No,No,27561,1271,28832,0.011446,13.23
+2026-09-08T08:43:20+00:00,cinema-creative-team,c6909094-5fbd-451d-be42-9c3d5d6b6c65,df2a38de-99de-436f-86c6-f9af2f88cd4b,che film ha diretto nolan,Graph Query Agent,"Christopher Nolan ha diretto i seguenti 8 film presenti nel database:
+
+1. **Memento** (2000) – Thriller, Mystery
+2. **Insomnia** (2002) – Crime, Thriller, Mystery
+3. **Batman Begins** (2005) – Action, Crime, Drama
+4. **The Prestige** (2006) – Drama, Thriller, Mystery
+5. **The Dark Knight** (2008) – Action, Crime, Drama, Thriller
+6. **Inception** (2010) – Action, Adventure, Science Fiction, Thriller, Mystery
+7. **The Dark Knight Rises** (2012) – Action, Crime, Drama, Thriller
+8. **Interstellar** (2014) – Adventure, Science Fiction, Drama",COMPLETED,gemini-3.5-flash-lite,Google,No,No,19829,1124,20953,0.008759,26.7

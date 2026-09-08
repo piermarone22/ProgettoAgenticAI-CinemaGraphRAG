@@ -35,7 +35,7 @@ def get_data():
 df_all, df_comuni = get_data()
 
 if df_all.empty:
-    st.info("Nessun log trovato né in `tmp/query_log.csv` né in `versione_2/tmp/query_log_v2.csv`.")
+    st.info("Nessun log trovato né in `tmp/query_log.csv` né nella tabella `query_log` di `versione_2/tmp/cinema_traces_v2.db`.")
     st.stop()
 
 df = df_all[df_all["status"] == "COMPLETED"].copy()

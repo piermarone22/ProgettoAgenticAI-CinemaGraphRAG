@@ -1,19 +1,6 @@
-"""Workflow deterministico per i pitch creativi: chiama Graph Query Agent e
-Semantic Query Agent in PARALLELO (asyncio.gather) e poi sintetizza il
-risultato con un agente di sintesi SENZA tool.
-
-Differenza rispetto all'architettura originale (root/agent.py): lì la
-parallelizzazione dei due worker è ottenuta con un'istruzione al coordinator
-("chiama delegate_task_to_member due volte nello stesso turno") — funziona,
-ma il coordinator deve comunque 'decidere' di seguirla ogni volta (un giro di
-ragionamento). Qui il router ha già riconosciuto il pattern deterministicamente
-(vedi router.py), quindi la chiamata parallela ai due worker avviene
-direttamente in codice, senza alcun LLM che debba "decidere" di farlo.
-
-La sintesi finale resta comunque un passaggio necessario (fondere due testi in
-un pitch narrativo coerente è un compito generativo, non automatizzabile con
-regole) — il risparmio è sul giro di orchestrazione iniziale, non sulla
-generazione creativa in sé.
+"""Workflow deterministico per i pitch: chiama Graph Query Agent e Semantic
+Query Agent in parallelo (asyncio.gather), poi un agente di sintesi senza
+tool fonde i due risultati nel pitch finale.
 """
 
 import sys
@@ -23,12 +10,12 @@ from pathlib import Path
 # agent.py vive in app/, alla radice del progetto.
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent / "app"))
 
-import asyncio  # noqa: E402
+import asyncio  
 
-from agno.agent import Agent  # noqa: E402
-from agno.models.fallback import FallbackConfig  # noqa: E402
+from agno.agent import Agent  
+from agno.models.fallback import FallbackConfig  
 
-from agent import graph_agent, semantic_agent, _gemini_worker, _groq_fallback  # noqa: E402
+from agent import graph_agent, semantic_agent, _gemini_worker, _groq_fallback  
 
 _synthesis_agent = Agent(
     name="Pitch Synthesizer",

@@ -68,7 +68,7 @@ def main() -> None:
             print()
 
     print(f"Fatto: {ok} completate, {errori} con problemi su {totale} totali ({len(gruppi)} categorie).")
-    print("Dettagli completi (risposta integrale, percorso, token, costo, tempo) in versione_2/tmp/query_log_v2.csv.")
+    print("Dettagli completi (risposta integrale, percorso, token, costo, tempo) nella tabella query_log di versione_2/tmp/cinema_traces_v2.db.")
 
 
 if __name__ == "__main__":
