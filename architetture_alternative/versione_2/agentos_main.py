@@ -1,26 +1,11 @@
 """AgentOS per l'architettura a router (versione_2): stessa logica di
-instradamento di router.classifica()/main.py, ma esposta come Workflow con
-uno step Router, così da essere esplorabile dal pannello AgentOS Web come
-versione_1 (app/main.py). Porta 8002, separata da main.py (porta 8001).
+router.classifica()/main.py, esposta come Workflow con uno step Router,
+esplorabile dal pannello AgentOS Web (porta 8002, separata da main.py/8001).
 
-Nota: Workflow non supporta un post_hook automatico come Team, quindi ogni
-step richiama quality_eval a mano (fire-and-forget, stessa logica di
-_valuta_in_background in main.py) sui percorsi diretti — sul percorso
-AMBIGUOUS no, perché cinema_team ha gia' quality_eval come post_hook nativo e
-richiamarlo di nuovo duplicherebbe la valutazione. Scrive inoltre nella stessa
-tabella query_log (log_query(), identica logica di main.py per ciascun
-percorso), cosi' le domande fatte dal pannello AgentOS Web compaiono anche
-nella dashboard di versione_2.
-
-Il tracing di AgentOS (sessioni/run nelle tabelle agno_*) va su un db dedicato,
-cinema_traces_v2.db, separato da quello di versione_1 — con un'eccezione: il
-percorso AMBIGUOUS riusa l'oggetto cinema_team importato da app/agent.py, che
-ha il proprio db (quello di versione_1) già cablato alla costruzione, quindi
-la SESSIONE AgentOS del solo fallback al Team finisce comunque nel db
-originale (stesso comportamento di main.py, che riusa lo stesso oggetto). La
-riga di query_log, invece, va sempre nel db di versione_2 per tutti i
-percorsi: log_query() e' una scrittura SQL esplicita, indipendente dal db
-interno di cinema_team.
+Workflow non ha un post_hook automatico come Team: ogni percorso diretto
+richiama quality_eval e log_query() a mano. Il percorso AMBIGUOUS fa
+eccezione su entrambi (post_hook nativo di cinema_team, e db AgentOS proprio
+già cablato in app/agent.py) — vedi i commenti nei singoli step sotto.
 """
 
 import asyncio
@@ -44,7 +29,9 @@ from agno.workflow.workflow import Workflow  # noqa: E402
 from agent import graph_agent, semantic_agent, cinema_team, quality_eval  # noqa: E402
 
 # Db dedicato a versione_2: tiene separate le sessioni/run di questo Workflow
-# da quelle di versione_1 (che vivono in tmp/cinema_traces.db).
+# da quelle di versione_1 (tmp/cinema_traces.db) — eccetto la sessione del
+# percorso AMBIGUOUS, che riusa cinema_team con il SUO db gia' cablato in
+# app/agent.py (vedi _esegui_ambiguous_step piu' sotto).
 db_v2 = SqliteDb(db_file=str(Path(__file__).resolve().parent / "tmp" / "cinema_traces_v2.db"))
 
 from router import classifica, controlla_prompt_injection, Percorso  # noqa: E402
