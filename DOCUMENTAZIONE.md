@@ -21,9 +21,11 @@ progetto in futuro.
 10. [Osservabilità: logging e dashboard](#10-osservabilità-logging-e-dashboard)
 11. [Valutazione (LLM-as-a-Judge)](#11-valutazione-llm-as-a-judge)
 12. [Test set](#12-test-set)
-13. [Organizzazione del repository](#13-organizzazione-del-repository)
-14. [Limiti noti del sistema](#14-limiti-noti-del-sistema)
-15. [Sviluppi futuri](#15-sviluppi-futuri)
+13. [Architettura alternativa: router deterministico (versione_2)](#13-architettura-alternativa-router-deterministico-versione_2)
+14. [Confronto tra le due architetture](#14-confronto-tra-le-due-architetture)
+15. [Organizzazione del repository](#15-organizzazione-del-repository)
+16. [Limiti noti del sistema](#16-limiti-noti-del-sistema)
+17. [Sviluppi futuri](#17-sviluppi-futuri)
 
 ---
 
@@ -40,6 +42,14 @@ Il sistema è esposto via **FastAPI/AgentOS**, osservabile tramite un middleware
 logging e una **dashboard Streamlit**, ed è stato validato empiricamente — mai
 per plausibilità della risposta, sempre per confronto diretto con i dati sorgente
 in Neo4j/ChromaDB — su un set di 43 domande di test categorizzate.
+
+Il progetto include anche una **seconda architettura sperimentale** (§13),
+costruita per confrontare l'approccio "tutto attraverso il coordinatore"
+dell'architettura principale con un **router deterministico** che instrada
+ogni domanda al percorso giusto (grafo, semantica, pitch parallelo) per
+similarità su embedding, **prima** di qualunque chiamata LLM — evitando il
+costo di orchestrazione del coordinatore quando non serve. Le due architetture
+sono state confrontate empiricamente su token, tempo e qualità (§14).
 
 ### Stack tecnologico
 
@@ -190,7 +200,7 @@ Sette tool custom su Neo4j (via driver `neo4j`, query Cypher parametriche) più
 
 **Istruzione critica**: "Rispondi SOLO con dati estratti dai tool. Non inventare
 mai film, attori o relazioni." — nonostante questo, sono stati riscontrati casi
-di violazione (documentati in §14): l'istruzione riduce ma non elimina il
+di violazione (documentati in §16): l'istruzione riduce ma non elimina il
 rischio di allucinazione.
 
 ### 3.3 — Semantic Query Agent
@@ -312,7 +322,7 @@ Graph Agent): blocca `CREATE, DELETE, MERGE, SET, DROP, REMOVE, DETACH` prima
 dell'esecuzione, restituendo un errore esplicito invece di eseguire la query.
 Verificato con un test dedicato (`MATCH (f:Film) DETACH DELETE f`) nel test set.
 
-**Limite noto** (vedi anche §14): la protezione è applicata a livello di tool
+**Limite noto** (vedi anche §16): la protezione è applicata a livello di tool
 (pattern-matching sulla query generata), non a livello di permessi del database
 — non esiste un utente Neo4j dedicato in sola lettura.
 
@@ -447,11 +457,6 @@ misurata la riduzione della durata end-to-end su richieste reali di pitch
 completo: **108.6s (mediana, prima) → 91.3s, 65.2s, 51.2s (dopo, run
 successive)**.
 
-*(Nota: questa modifica, insieme alla cache di risposte del §8, è stata
-implementata su richiesta esplicita di non includerla in un commit — resta
-quindi nel working tree in attesa di una decisione successiva sull'inclusione
-nella cronologia git.)*
-
 ---
 
 ## 10. Osservabilità: logging e dashboard
@@ -525,6 +530,14 @@ costo stimato, durata end-to-end.
 - **Timezone**: timestamp convertiti a `Europe/Rome` solo nella colonna
   visualizzata della tabella (i dati restano in UTC internamente).
 
+### 10.3 — Osservabilità di versione_2
+
+L'architettura a router (§13) ha uno stack di osservabilità **separato e
+indipendente**, non una variante di quello sopra: log su un db SQLite dedicato
+(non un CSV), una dashboard propria raggruppata per percorso invece che per
+combinazione di agenti, e un'ulteriore dashboard di **confronto** tra le due
+architetture. Dettagli in §13 e §14.
+
 ---
 
 ## 11. Valutazione (LLM-as-a-Judge)
@@ -546,11 +559,33 @@ valutazione automatica tramite `AgentAsJudgeEval` (Agno), integrata come
 Punteggio numerico 1-10, soglia di accettazione **7**, persistito in
 `agno_eval_runs` (`tmp/cinema_traces.db`).
 
+**Copertura su versione_2 (§13)**: il `post_hook` automatico esiste solo su
+`Team`, non sui percorsi diretti del router (che chiamano `graph_agent`/
+`semantic_agent` singolarmente, bypassando il coordinatore apposta per
+risparmiarne il costo). Per non perdere la copertura di qualità, quei percorsi
+richiamano `quality_eval` **esplicitamente**, in background
+(`asyncio.create_task`, fire-and-forget, stessa logica del post-hook nativo) —
+un costo extra di chiamate LLM accettato consapevolmente. Sul percorso
+`ambiguous` (fallback al Team) la chiamata esplicita viene invece
+deliberatamente **omessa**, perché scatterebbe comunque il post-hook nativo di
+`cinema_team` e la duplicherebbe.
+
+**Bug di libreria documentato**: il fallback Groq del giudice (stesso
+meccanismo del §5) è stato collegato ma **non funziona**: `AgentAsJudgeEval`
+richiede output strutturato (`output_schema`, una classe Pydantic), e il
+client Groq di Agno crash con `Object of type ModelMetaclass is not JSON
+serializable` quando prova a costruire il `response_format` — un bug reale
+della libreria, non del codice del progetto (lo stesso modello Groq funziona
+correttamente per gli altri agenti, che producono testo libero, non output
+strutturato). Non è stato implementato un workaround (parsing di un output
+testuale) per scelta esplicita: il giudice resta quindi **non disponibile**
+quando Gemini è sia in quota sia in errore contemporaneamente.
+
 **Limite strutturale, documentato con casi concreti**: il giudice vede solo
 **input/output testuale** del run, non il trace delle chiamate ai tool — non
 può distinguere un dato realmente recuperato da un'affermazione plausibile ma
 allucinata. Due casi reali hanno confermato questo limite durante la
-validazione manuale (dettagliati in §14): un'allucinazione sulla trama di
+validazione manuale (dettagliati in §16): un'allucinazione sulla trama di
 *Snatch* (Semantic Agent, innescata da un fallimento del tool) e la fabbricazione
 di un attore/film inesistenti nel grafo (Graph Agent, *Lady Bird*/Timothée
 Chalamet) — **nessuno dei due intercettato dal giudice automatico**.
@@ -593,31 +628,252 @@ i dati sorgente (query Cypher dirette o ispezione dei documenti ChromaDB), mai
 per plausibilità — questo ha permesso di scoprire allucinazioni che un controllo
 qualitativo o il solo giudice automatico non avrebbero intercettato.
 
+### 12.1 — Altri due set di dati, per scopi diversi
+
+Il progetto usa **tre** set di domande distinti, ciascuno con uno scopo
+specifico — vanno tenuti separati per non invalidare le rispettive verifiche:
+
+| Set | File | Scopo |
+|---|---|---|
+| Test set originale (sopra) | `testing/domande_di_test.csv` | Validare la qualità/correttezza dell'architettura principale |
+| Esempi di classificazione | `architetture_alternative/versione_2/esempi_classificazione.csv` (112 domande) | Esemplari etichettati con cui il router di versione_2 classifica per similarità (§13) — **non** un test set di qualità, sono gli esempi noti contro cui si confronta ogni domanda nuova |
+| Held-out per il confronto | `testing/domande_confronto_holdout.csv` (12 domande) | Confrontare v1/v2 su domande mai viste dal router — verificato programmaticamente **zero overlap** con gli esempi di classificazione, altrimenti il confronto sarebbe stato viziato (§14) |
+
 ---
 
-## 13. Organizzazione del repository
+## 13. Architettura alternativa: router deterministico (versione_2)
+
+### 13.1 — Motivazione
+
+Nell'architettura principale (§3), **ogni** domanda passa dal coordinatore
+(`cinema_team`, `mode=coordinate`), che è esso stesso una chiamata LLM: anche
+una domanda fattuale semplice ("Chi ha diretto Interstellar?") paga il costo
+di orchestrazione del coordinatore oltre a quello del worker che risponde
+davvero. `versione_2` testa un'ipotesi alternativa: **decidere il percorso
+prima** di qualunque chiamata LLM, con un meccanismo deterministico e a costo
+quasi nullo, così le domande semplici arrivano dritte al worker giusto, e solo
+i casi davvero ambigui pagano il costo pieno del coordinatore.
+
+Vive in `architetture_alternative/versione_2/`, **riusa direttamente** gli
+stessi agenti/tool/guardrail di `app/agent.py` (stesso `graph_agent`,
+`semantic_agent`, `cinema_team`, `quality_eval`) tramite `sys.path.append` —
+non duplica la logica di dominio, solo la strategia di instradamento.
+
+### 13.2 — I quattro percorsi
+
+```python
+class Percorso(str, Enum):
+    GRAPH = "graph"
+    SEMANTIC = "semantic"
+    PITCH = "pitch"
+    AMBIGUOUS = "ambiguous"
+```
+
+- **`GRAPH`/`SEMANTIC`**: chiamano direttamente `graph_agent`/`semantic_agent`,
+  **bypassando il coordinatore**.
+- **`PITCH`**: workflow deterministico dedicato (`pitch_workflow.py`) — esegue
+  Graph e Semantic Agent **in parallelo** (`asyncio.gather`, nessuna istruzione
+  testuale al coordinatore necessaria per ottenere il parallelismo, a
+  differenza del §9) poi un agente di sintesi senza tool fonde i due risultati.
+- **`AMBIGUOUS`**: fallback sull'architettura originale — `cinema_team.arun()`
+  identico a `app/main.py`, con lo stesso post-hook del giudice nativo.
+
+### 13.3 — Evoluzione del classificatore: da keyword a similarità
+
+La prima versione instradava per **parole chiave fisse** (regex/pattern
+matching). Scartata perché "ragiona solo per parole fisse": una domanda
+semanticamente identica ma formulata diversamente da qualunque pattern noto
+finiva mal classificata o in `AMBIGUOUS` senza necessità. Sostituita con un
+classificatore basato su **similarità coseno su embedding**:
+
+1. 112 domande etichettate a mano (`esempi_classificazione.csv`), con
+   embedding **precalcolati offline** da un notebook dedicato
+   (`ingestion/embedding_esempi_classificazione.ipynb`, stesso pattern di
+   checkpointing/retry di `ingestion.ipynb`) — `router.py` non calcola mai
+   embedding per gli esempi, solo per la domanda in arrivo, così un riavvio
+   del server non richiede fino a 112 chiamate API per rimettersi in pari.
+2. Per ogni domanda nuova: si calcola la similarità con tutti i 112 esempi, si
+   prendono i **top-5** più simili (`_TOP_K = 5`).
+3. **Tre condizioni**, tutte necessarie, altrimenti si ricade su `AMBIGUOUS`:
+   - il più simile in assoluto supera la soglia di confidenza (`0.60`);
+   - tra i 5 vicini, almeno 3 concordano sulla stessa categoria (maggioranza
+     stretta, `_MIN_VOTI_MAGGIORANZA = 3`);
+   - la categoria del vicino più simile in assoluto **coincide** con quella
+     vincitrice della maggioranza.
+
+**Nota terminologica esplicita**: il meccanismo (retrieval dei vicini più
+simili + voto di maggioranza) è concettualmente uno schema k-NN, ma
+**non c'è alcun training** — nessun modello viene addestrato, i "vicini" sono
+gli stessi 112 esempi etichettati a mano, confrontati ogni volta da zero per
+similarità coseno. Una alternativa con classificatore addestrato (es.
+XGBoost) è stata scartata per dati insufficienti a un training affidabile.
+
+**Perché la terza condizione**: senza di essa, un caso concreto veniva
+instradato male. Esempio: *"Trovami qualcosa di simile a Il Padrino ma con un
+tocco più moderno, magari con un regista che sappia gestire bene questo tipo
+di atmosfera"* — genuinamente ambigua (mescola ricerca per atmosfera e
+richiesta di un regista specifico). Il vicino più simile in assoluto era di
+categoria `semantic`, ma 2 dei 3 vicini più prossimi erano `pitch` — la sola
+maggioranza avrebbe fatto vincere `pitch` nonostante il segnale più forte (il
+primo vicino) indicasse `semantic`. Aggiungendo il vincolo "il vincitore deve
+coincidere col primo classificato", il caso ricade correttamente su
+`AMBIGUOUS`.
+
+**Calibrazione e validazione**: `k`, soglia e regola di maggioranza sono stati
+scelti tramite **cross-validation leave-one-out** sui 112 esempi (ogni esempio
+"finto nuovo" riclassificato usando gli altri 111 come pool), senza alcuna
+chiamata API live — risultato finale: 96 corretti, 1 sbagliato, 15 lasciati
+onestamente `AMBIGUOUS` su 112. Verificato anche con domande mai viste dal
+classificatore (parafrasi ed entità nuove, non nell'insieme di esempi) e con i
+tre esempi discussi nella presentazione (DiCaprio → graph, pitch su Nolan →
+pitch, "Il Padrino" → ambiguous), tutti classificati correttamente dal vivo.
+
+### 13.4 — Guardrail: perché resta a keyword fisse
+
+Il controllo anti-prompt-injection (`controlla_prompt_injection`, stessa
+lista di pattern del §6.1) **non** è stato convertito a similarità come il
+resto del router — scelta deliberata: un controllo di sicurezza deve restare
+**prevedibile**. Con una soglia di confidenza, un tentativo di attacco scritto
+in modo che "assomigli poco" ai pattern noti (pur contenendo la stessa
+istruzione malevola) potrebbe scivolare sotto soglia. Le keyword fisse non
+hanno questa via di fuga per le formulazioni che riconoscono.
+
+### 13.5 — Esposizione su AgentOS Web (`agentos_main.py`)
+
+Oltre all'endpoint `/query` "misurato" (porta 8001, usato da test e
+confronto), la stessa logica di routing è esposta anche sul pannello AgentOS
+Web (porta 8002, come l'architettura principale), tramite un `Workflow` Agno
+con uno step `Router` — il `selector` richiama direttamente
+`router.classifica()`, la stessa funzione usata da `main.py` (nessuna
+duplicazione della logica di instradamento). Ogni percorso registra comunque
+una riga nel log strutturato e richiama il giudice in background, con la
+stessa parità di comportamento descritta in §10.3/§11.
+
+### 13.6 — Osservabilità dedicata
+
+Il logging di versione_2 (`query_logger.py`) scrive nella tabella `query_log`
+di un **db SQLite dedicato**
+(`architetture_alternative/versione_2/tmp/cinema_traces_v2.db`), non un CSV
+— scelta fatta per tenere separato lo storico di versione_2 da quello
+dell'architettura principale, e per condividere lo stesso file db usato dalle
+sessioni AgentOS di `agentos_main.py` (tabelle distinte per nome, stesso
+file). Un'eccezione: il percorso `AMBIGUOUS` riusa l'oggetto `cinema_team` di
+`app/agent.py`, che ha il proprio db (quello di versione_1) già cablato alla
+costruzione — la **sessione AgentOS** di quel solo percorso finisce quindi nel
+db originale, mentre la riga di `query_log` (scrittura SQL esplicita,
+indipendente) va sempre nel db di versione_2 per tutti i percorsi.
+
+Dashboard dedicata (`architetture_alternative/versione_2/dashboard/`),
+raggruppata per **percorso** invece che per combinazione di agenti — con un
+KPI esplicito su quanto spesso il router evita il percorso costoso
+(`ambiguous`) rispetto ai percorsi diretti.
+
+---
+
+## 14. Confronto tra le due architetture
+
+### 14.1 — Metodologia (`testing/FRAMEWORK_CONFRONTO.md`)
+
+Sei principi, applicati rigorosamente per un confronto **equo**:
+
+1. **Solo domande held-out**: mai domande già presenti negli esempi di
+   classificazione del router (§12.1), altrimenti il confronto sarebbe viziato
+   a favore di versione_2.
+2. **Esecuzione interleaved**: stessa domanda su v1 e v2 **alternata**, non in
+   blocco, per non far coincidere l'ordine con condizioni esterne diverse
+   (quota, carico) tra le due architetture.
+3. **Attesa obbligatoria della valutazione del giudice** prima di considerare
+   completa una singola esecuzione (con una checklist pre-test che include il
+   controllo della quota giornaliera Gemini e il bug noto del §11 sul
+   fallback Groq del giudice).
+4. **Mediana preferita alla media**: meno sensibile a outlier reali (es. un
+   blackout di servizio di ~3h23m osservato durante lo sviluppo, §4).
+5. **Fallback tracciato come variabile a parte**: se scatta per una sola
+   architettura per puro timing di quota, quella domanda va segnalata o
+   esclusa dal confronto principale.
+6. **Un CSV dedicato per ogni esecuzione di confronto**, non solo i log
+   condivisi — perché la dashboard di confronto, sulle "domande comuni",
+   prende la run più recente per ciascuna domanda in ciascun log: se la stessa
+   domanda fosse già stata posta in una sessione precedente, un confronto
+   letto da lì rischierebbe di mescolare esecuzioni di sessioni diverse,
+   vanificando l'alternanza del punto 2.
+
+### 14.2 — Script ed esecuzione (`testing/esegui_confronto_interleaved.py`)
+
+Automatizza i sei principi sopra: alterna le chiamate a v1/v2, attende (con
+polling su `agno_eval_runs`) la valutazione del giudice per ciascuna con un
+timeout esplicito, legge la riga appena scritta nel log di ciascuna
+architettura (CSV per v1, tabella `query_log` del db dedicato per v2, §13.6),
+e scrive un CSV di risultati **autosufficiente** per quella sola esecuzione,
+con i delta già calcolati (token, durata, punteggio).
+
+### 14.3 — Analisi storica (`architetture_alternative/confronto/analisi_storica.ipynb`)
+
+Oltre al confronto controllato sopra, un notebook analizza **tutte** le
+domande già eseguite in passato su entrambe le architetture (28+ domande in
+comune al momento della stesura), per uno sguardo di insieme su un campione
+più ampio di quello di un singolo run interleaved.
+
+**Bug di data quality scoperto e corretto durante l'analisi**: la selezione
+"esecuzione più recente per ciascuna domanda" su v1 poteva selezionare una
+riga servita dalla **cache delle risposte** (§8, durata ≈ 0s), facendo
+apparire v1 falsamente istantanea su quella domanda. Fix: escludere le righe
+`risposta_da_cache = "Sì"` prima di scegliere la "più recente" — la
+correzione ha cambiato il delta medio di durata da **-8.6%** a **+12.0%** a
+favore di v1 (un risultato meno favorevole a v2, riportato comunque
+onestamente perché era quello vero).
+
+**Divergenza mediana/media**: sulle stesse domande, la mediana della durata
+mostra v2 **~33% più veloce** di v1, mentre la media (dopo il fix sopra) è
+**+12.0%** più lenta — divergenza reale dovuta a poche domande con tempi
+molto alti (es. pitch, che richiedono più chiamate LLM in sequenza), non un
+errore di calcolo: da qui il punto 4 della metodologia (§14.1), preferire la
+mediana per non farsi distorcere da questi outlier reali.
+
+### 14.4 — Dashboard di confronto (`architetture_alternative/confronto/app.py`)
+
+KPI aggregati, tabella delle domande comuni con delta per singola domanda
+(token/durata/**numero di chiamate LLM**, non solo tempo/token — il numero di
+chiamate cattura direttamente il risparmio strutturale del router: v1 paga
+sempre `1 + N worker delegati` per il coordinatore, v2 paga `N worker` sui
+percorsi diretti, `1 + N` solo su `ambiguous`), grafici di composizione e
+distribuzione sovrapposti, confronto dei punteggi del giudice.
+
+---
+
+## 15. Organizzazione del repository
 
 ### Struttura delle directory
 
 ```
 app/                            # Architettura principale (produzione): Team coordinate
 ├── agent.py                    #   team, agenti worker, tool, guardrail, memoria, giudice
-├── main.py                     #   FastAPI/AgentOS
+├── main.py                     #   FastAPI/AgentOS (porta 8000)
 ├── query_logger.py             #   middleware di logging + cache
 └── response_cache.py           #   cache semantica delle risposte
 
 dashboard/                      # Dashboard Streamlit dell'architettura principale
-testing/                        # Suite di test (43 domande categorizzate)
+testing/                        # Suite di test e framework di confronto tra architetture
+├── domande_di_test.csv/.md       #   43 domande categorizzate con ground truth (§12)
+├── domande_confronto_holdout.csv #   12 domande held-out per il confronto v1/v2 (§14)
+├── esegui_confronto_interleaved.py
+└── FRAMEWORK_CONFRONTO.md        #   metodologia del confronto (§14.1)
 
 architetture_alternative/       # Esperimenti architetturali per il confronto
 ├── versione_1/                 #   snapshot statico di riferimento (non eseguibile standalone)
-├── versione_2/                 #   router deterministico + workflow parallelo (§15)
-│   ├── main.py, router.py, pitch_workflow.py, query_logger.py
-│   ├── dashboard/               #   dashboard dedicata, raggruppata per percorso
-│   └── testing/                 #   stessa suite di test, adattata all'endpoint /query
-└── confronto/                  #   dashboard che confronta le due architetture fianco a fianco
+├── versione_2/                 #   router deterministico + workflow parallelo (§13)
+│   ├── router.py                 #   classificazione per similarità su embedding
+│   ├── pitch_workflow.py          #   workflow parallelo per i pitch
+│   ├── esempi_classificazione.csv #   112 esempi etichettati per il router (§13.3)
+│   ├── main.py, query_logger.py   #   endpoint /query "misurato" (porta 8001) + log su db dedicato
+│   ├── agentos_main.py            #   stesso router esposto su AgentOS Web (porta 8002, §13.5)
+│   ├── dashboard/                 #   dashboard dedicata, raggruppata per percorso
+│   └── testing/                   #   stessa suite di test, adattata all'endpoint /query
+└── confronto/                  #   dashboard + notebook di analisi storica tra le due architetture (§14)
 
 ingestion/                      # Notebook di popolamento Neo4j + ChromaDB
+├── ingestion.ipynb               #   pipeline principale (§2.3)
+└── embedding_esempi_classificazione.ipynb  # embedding offline dei 112 esempi del router (§13.3)
 neo4j_export/                   # Export del grafo in CSV/JSON
 data/                           # Dataset sorgente (TMDB CSV, biografie)
 Presentazione/                  # Materiale per la presentazione d'esame
@@ -636,16 +892,21 @@ definiti in `app/agent.py` (stessa configurazione, stesso fallback, stesso
 knowledge base) tramite un `sys.path.append` mirato a quella directory — non
 duplicano la logica del dominio, solo la strategia di orchestrazione.
 
-- **Branching**: `master` (stabile) ← `develop` ← `sviluppo_1` (feature branch
-  attivo), con workflow esplicito feature → develop → master a doppio merge.
-  Pattern pensato per essere esteso con nuovi branch `sviluppo_N` sotto
-  `develop` per sviluppi futuri.
+- **Branching**: `master` (stabile) ← `develop` ← `sviluppo_N` (feature branch
+  attivo, es. `sviluppo_2`), con workflow esplicito feature → develop → master
+  a doppio merge (fast-forward) a ogni rilascio, poi ritorno sul branch di
+  sviluppo per continuare. Pattern pensato per essere esteso con nuovi branch
+  `sviluppo_N` per sviluppi futuri.
 - **`.gitignore`**, con enfasi sulla sicurezza: `.env` escluso fin dal primo
   commit (verificato con grep sui diff staged per pattern di chiavi API prima
   di ogni commit: `AIza...`, `gsk_...`, `sk-...`), file di lock di PowerPoint
   (`~$*`), dati runtime pesanti e rigenerabili (`tmp/chromadb/`,
-  `tmp/cinema_traces.db`, `tmp/query_log.xlsx`) esclusi perché non adatti a
-  git e ricostruibili dall'ingestion/dall'uso del sistema.
+  `tmp/cinema_traces.db`, il suo equivalente per versione_2
+  `architetture_alternative/versione_2/tmp/cinema_traces_v2.db`,
+  `tmp/query_log.xlsx`) esclusi perché non adatti a git e ricostruibili
+  dall'ingestion/dall'uso del sistema. Il file della presentazione d'esame
+  resta deliberatamente fuori dalla cronologia dei commit (aggiornato e
+  condiviso separatamente, non tramite il repository).
 - **Pulizia del codice**: rimossi durante lo sviluppo `models.py`,
   `recipebot_app.py`, un notebook di ingestion duplicato/obsoleto
   (`da_csv_a_neo4jaa.ipynb`) e una copia orfana del database vettoriale sotto
@@ -655,7 +916,7 @@ duplicano la logica del dominio, solo la strategia di orchestrazione.
 
 ---
 
-## 14. Limiti noti del sistema
+## 16. Limiti noti del sistema
 
 ### Dati
 - **Dataset non aggiornato** (TMDB 5000, fermo al 2016-2017 circa): persone e
@@ -663,7 +924,8 @@ duplicano la logica del dominio, solo la strategia di orchestrazione.
   "nessun risultato", non invenzione), ma è un limite di copertura strutturale.
 - **Nessuna capacità di scrittura**: sistema solo in lettura (blocklist Cypher);
   aggiornare il grafo richiede una nuova esecuzione manuale della pipeline di
-  ingestion (vedi proposta di Router Agent + Builder Workflow, §15).
+  ingestion (vedi proposta di Builder Workflow, §17) — resta vero anche per
+  versione_2 (§13), che instrada in modo diverso ma è comunque solo in lettura.
 - **Nessun chunking** degli embedding: adeguato alla dimensione attuale dei
   testi, non scalerebbe a documenti molto più lunghi.
 
@@ -683,7 +945,7 @@ individuato **casi concreti e riproducibili**:
 - Il giudice automatico non vede il trace dei tool — non intercetta nessuno dei
   casi sopra.
 - Validazione empirica manuale su un set fisso di 43 domande, non ancora una
-  suite di regressione automatica con metriche aggregate (RAGAS, §15).
+  suite di regressione automatica con metriche aggregate (RAGAS, §17).
 
 ### Architettura e conversazione
 - **Memoria conversazionale** limitata a `num_history_runs=5`: in conversazioni
@@ -710,26 +972,43 @@ individuato **casi concreti e riproducibili**:
 - **API senza autenticazione**: accettabile in un contesto d'esame, non per un
   deployment reale.
 
+### Architettura router (versione_2, §13)
+- **Classificatore per similarità, non un NER/parser completo**: si basa su
+  112 esempi etichettati a mano — copre bene i pattern di domanda osservati
+  durante lo sviluppo, ma un dominio molto più ampio richiederebbe un set di
+  esempi più grande per restare accurato.
+- **Nessuna cache delle risposte**: a differenza dell'architettura principale
+  (§8), versione_2 non implementa una cache — ogni domanda, anche ripetuta,
+  riesegue la pipeline completa.
+- **Il fallback `AMBIGUOUS` riusa `cinema_team` così com'è**: eredita quindi
+  anche i suoi limiti (memoria conversazionale, parallelizzazione basata su
+  prompt) descritti sopra.
+- **Esposizione AgentOS (`agentos_main.py`) senza cache/autenticazione**,
+  stesso livello di maturità del resto del progetto — pensata per
+  l'esplorazione interattiva, non per un uso in produzione.
+
 ---
 
-## 15. Sviluppi futuri
+## 17. Sviluppi futuri
 
-### Router Agent + Builder Workflow (proposta architetturale, non testata)
+### Builder Workflow per la scrittura (non implementato)
 
-Per superare il limite "solo lettura", è stata disegnata un'evoluzione con un
-**Router Agent** a monte del sistema attuale: classifica l'intento della
-richiesta e la instrada verso il **Creative Agent** esistente (per domande,
-fattuali o creative) oppure verso un nuovo **Builder Workflow** dedicato
-all'ingestion conversazionale (es. *"Aggiungi al grafo il film Inception e
-tutte le informazioni sugli attori principali"*), che validerebbe i dati,
-popolerebbe Neo4j e genererebbe gli embedding ChromaDB corrispondenti.
+Il sistema resta **solo in lettura** su entrambe le architetture (blocklist
+Cypher, §6.2). Per superare questo limite, era stata disegnata — insieme al
+Router Agent poi effettivamente costruito come versione_2 (§13) — l'idea di
+un **Builder Workflow** dedicato all'ingestion conversazionale (es.
+*"Aggiungi al grafo il film Inception e tutte le informazioni sugli attori
+principali"*), che validerebbe i dati, popolerebbe Neo4j e genererebbe gli
+embedding ChromaDB corrispondenti.
 
-**Non è stata testata empiricamente in questa fase**: un comando di scrittura
+**Deliberatamente non implementato**: a differenza della parte di
+instradamento (costruita, testata e confrontata empiricamente in versione_2),
+la parte di scrittura non è mai stata realizzata. Un comando di scrittura
 implicherebbe chiamate LLM aggiuntive (estrazione strutturata, validazione,
 generazione embedding) con un consumo di token e una pressione sui limiti di
 quota free-tier — già un vincolo stretto per tutto il resto dello sviluppo —
-non sostenibile da validare empiricamente nei tempi del progetto. Resta una
-proposta motivata architetturalmente ma non validata sperimentalmente.
+non sostenibile nei tempi del progetto. Resta una proposta motivata
+architetturalmente ma non implementata.
 
 ### RAGAS
 
